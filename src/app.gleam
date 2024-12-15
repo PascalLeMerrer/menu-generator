@@ -1,6 +1,5 @@
 import app/router
 import app/web.{Context}
-import gleam/result
 
 import dot_env
 import dot_env/env
@@ -12,17 +11,17 @@ import wisp/wisp_mist
 pub fn main() {
   wisp.configure_logger()
 
-  dot_env.new()
-  |> dot_env.set_path(".env")
-  |> dot_env.set_debug(False)
-  |> dot_env.load
+ // dot_env.new()
+ // |> dot_env.set_path(".env")
+ // |> dot_env.set_debug(False)
+ // |> dot_env.load
+  dot_env.load()
 
   let assert Ok(secret_key_base) = env.get_string("SECRET_KEY_BASE")
 
   let ctx =
     Context(
-      static_directory: wisp.priv_directory("app")
-        |> result.unwrap("priv/static"),
+      static_directory: static_directory(),
       items: [],
     )
 
@@ -33,5 +32,11 @@ pub fn main() {
     |> mist.port(4000)
     |> mist.start_http
 
+
   process.sleep_forever()
+}
+
+pub fn static_directory() -> String {
+  let assert Ok(priv_directory) = wisp.priv_directory("app")
+  priv_directory <> "/static"
 }

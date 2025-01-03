@@ -18,13 +18,15 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
     |> io.debug
 
   let recipe_decoder: decode.Decoder(Recipe) = {
-    use ingredients <- decode.subfield(
-      ["ingredient", "li"],
-      decode.list(decode_nested_string()),
+    use ingredients <- decode.optional_field(
+      "ingredient",
+      [],
+      decode.at(["li"], decode.list(decode_nested_string())),
     )
-    use steps <- decode.subfield(
-      ["recipetext", "li"],
-      decode.list(decode_nested_string()),
+    use steps <- decode.optional_field(
+      "recipetext",
+      [],
+      decode.at(["li"], decode.list(decode_nested_string())),
     )
 
     let actual_ingredients =
@@ -37,13 +39,18 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
 
     decode.success(Recipe(actual_ingredients, actual_steps))
   }
-  let cookbook_decoder = {
-    use recipes <- decode.subfield(
-      ["cookbook", "recipe"],
-      decode.list(recipe_decoder),
+
+  let cookbook_decoder =
+    decode.one_of(
+      decode.at(["cookbook", "recipe"], decode.list(recipe_decoder)),
+      or: [
+        decode.at(
+          ["cookbook", "recipe"],
+          decode.then(recipe_decoder, fn(recipe) { decode.success([recipe]) }),
+        ),
+      ],
     )
-    decode.success(recipes)
-  }
+
   json.parse(from: json_string, using: cookbook_decoder)
 }
 

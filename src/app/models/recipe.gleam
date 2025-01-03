@@ -1,5 +1,4 @@
 import gleam/dynamic/decode
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/string_tree
@@ -15,37 +14,32 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
     source_json
     |> json.to_string_tree
     |> string_tree.to_string
-    |> io.debug
 
   let nested_string_decoder: decode.Decoder(String) = {
     use str <- decode.optional_field("$", "", decode.string)
     decode.success(str)
+  }
+  let string_or_list_of_strings_decoder: decode.Decoder(List(String)) = {
+    decode.one_of(decode.at(["li"], decode.list(nested_string_decoder)), or: [
+      decode.at(
+        ["li"],
+        decode.then(nested_string_decoder, fn(decoded_string) {
+          decode.success([decoded_string])
+        }),
+      ),
+    ])
   }
 
   let recipe_decoder: decode.Decoder(Recipe) = {
     use ingredients <- decode.optional_field(
       "ingredient",
       [],
-      decode.one_of(decode.at(["li"], decode.list(nested_string_decoder)), or: [
-        decode.at(
-          ["li"],
-          decode.then(nested_string_decoder, fn(ingredient) {
-            decode.success([ingredient])
-          }),
-        ),
-      ]),
+      string_or_list_of_strings_decoder,
     )
     use steps <- decode.optional_field(
       "recipetext",
       [],
-      decode.one_of(decode.at(["li"], decode.list(nested_string_decoder)), or: [
-        decode.at(
-          ["li"],
-          decode.then(nested_string_decoder, fn(steps) {
-            decode.success([steps])
-          }),
-        ),
-      ]),
+      string_or_list_of_strings_decoder,
     )
 
     let actual_ingredients =

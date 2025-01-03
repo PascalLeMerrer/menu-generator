@@ -8,8 +8,6 @@ pub fn main() {
 }
 
 pub fn from_xml_decodes_recipes_test() {
-  // the parser cannot decode a list with a unique recipe, because the xml to json transformation
-  // does not produce the same structure as with a list of recipes
   "<?xml version='1.0' encoding='UTF-8'?>
    <cookbook>
     <recipe>
@@ -266,6 +264,66 @@ pub fn from_xml_decodes_cookbook_containing_one_recipe_only_test() {
           "400 g de petites pommes de terre",
         ],
         ["Emincer le poireau", "Eplucher les carottes"],
+      ),
+    ]),
+  )
+}
+
+pub fn from_xml_decodes_recipe_with_only_one_ingredient_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Blanquette de la mer au cabillaud</title>
+            <ingredient>
+                <li>600 g de dos de cabillaud (en 4 pavés)</li>
+            </ingredient>
+            <recipetext>
+                <li>Emincer le poireau</li>
+                <li>Eplucher les carottes</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://lacerisesurlemaillot.fr/wp-content/uploads/2023/02/blanquette-cabillaud4.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe.from_xml()
+  |> io.debug()
+  |> should.equal(
+    Ok([
+      recipe.Recipe(["600 g de dos de cabillaud (en 4 pavés)"], [
+        "Emincer le poireau", "Eplucher les carottes",
+      ]),
+    ]),
+  )
+}
+
+pub fn from_xml_decodes_recipe_with_only_one_step_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Blanquette de la mer au cabillaud</title>
+            <ingredient>
+                <li>600 g de dos de cabillaud (en 4 pavés)</li>
+                <li>400 g de petites pommes de terre</li>
+            </ingredient>
+            <recipetext>
+                <li>Emincer le poireau</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://lacerisesurlemaillot.fr/wp-content/uploads/2023/02/blanquette-cabillaud4.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe.from_xml()
+  |> io.debug()
+  |> should.equal(
+    Ok([
+      recipe.Recipe(
+        [
+          "600 g de dos de cabillaud (en 4 pavés)",
+          "400 g de petites pommes de terre",
+        ],
+        ["Emincer le poireau"],
       ),
     ]),
   )

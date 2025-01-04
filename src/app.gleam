@@ -18,7 +18,7 @@ pub fn main() {
 
   let assert Ok(secret_key_base) = env.get_string("SECRET_KEY_BASE")
 
-  let ctx = Context(static_directory: static_directory(), items: [])
+  let ctx = Context(static_directory: static_directory())
 
   let handler = router.handle_request(_, ctx)
   let assert Ok(_) =

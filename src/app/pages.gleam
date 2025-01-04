@@ -1,6 +1,10 @@
-import app/models/item.{type Item}
 import app/pages/home
+import app/pages/upload
 
-pub fn home(items: List(Item)) {
-  home.root(items)
+pub fn home() {
+  home.root()
+}
+
+pub fn upload() {
+  upload.index()
 }

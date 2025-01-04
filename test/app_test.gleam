@@ -1,4 +1,5 @@
 import app/models/recipe
+import app/routes/recipe_routes
 import gleam/io
 import gleeunit
 import gleeunit/should
@@ -66,7 +67,7 @@ pub fn from_xml_decodes_recipes_test() {
     </recipe>
    </cookbook>
   "
-  |> recipe.from_xml()
+  |> recipe_routes.from_xml()
   |> should.equal(
     Ok([
       recipe.Recipe(["1 oignon", "1 citron"], ["Etape 1", "Etape 2"]),
@@ -120,7 +121,7 @@ pub fn from_xml_decodes_recipes_with_empty_ingredients_test() {
     </recipe>
    </cookbook>
   "
-  |> recipe.from_xml()
+  |> recipe_routes.from_xml()
   |> io.debug()
   |> should.equal(
     Ok([
@@ -175,7 +176,7 @@ pub fn from_xml_decodes_recipes_with_empty_steps_test() {
     </recipe>
    </cookbook>
   "
-  |> recipe.from_xml()
+  |> recipe_routes.from_xml()
   |> io.debug()
   |> should.equal(
     Ok([
@@ -224,7 +225,7 @@ pub fn from_xml_decodes_recipes_without_steps_test() {
     </recipe>
    </cookbook>
   "
-  |> recipe.from_xml()
+  |> recipe_routes.from_xml()
   |> io.debug()
   |> should.equal(
     Ok([
@@ -254,7 +255,7 @@ pub fn from_xml_decodes_cookbook_containing_one_recipe_only_test() {
         </recipe>
     </cookbook>
   "
-  |> recipe.from_xml()
+  |> recipe_routes.from_xml()
   |> io.debug()
   |> should.equal(
     Ok([
@@ -286,7 +287,7 @@ pub fn from_xml_decodes_recipe_with_only_one_ingredient_test() {
         </recipe>
     </cookbook>
   "
-  |> recipe.from_xml()
+  |> recipe_routes.from_xml()
   |> io.debug()
   |> should.equal(
     Ok([
@@ -314,7 +315,7 @@ pub fn from_xml_decodes_recipe_with_only_one_step_test() {
         </recipe>
     </cookbook>
   "
-  |> recipe.from_xml()
+  |> recipe_routes.from_xml()
   |> io.debug()
   |> should.equal(
     Ok([

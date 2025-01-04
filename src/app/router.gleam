@@ -1,7 +1,6 @@
-import app/models/recipe
 import app/pages
 import app/pages/layout.{layout}
-import app/routes/item_routes.{items_middleware}
+import app/routes/recipe_routes
 import app/web.{type Context}
 import gleam/http
 import gleam/int
@@ -20,26 +19,23 @@ import wisp.{type Request, type Response}
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
   use _req <- web.middleware(req, ctx)
-  use ctx <- items_middleware(req, ctx)
 
   case wisp.path_segments(req) {
     // Homepage
     [] -> {
-      [pages.home(ctx.items)]
+      [pages.home()]
       |> layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
-    ["items", "create"] -> {
-      use <- wisp.require_method(req, http.Post)
-      item_routes.post_create_item(req, ctx)
-    }
-    ["items", id] -> {
-      use <- wisp.require_method(req, http.Delete)
-      item_routes.delete_item(req, ctx, id)
+    ["import"] -> {
+      [pages.upload()]
+      |> layout
+      |> element.to_document_string_builder
+      |> wisp.html_response(200)
     }
 
-    ["upload"] -> {
+    ["recipes", "upload"] -> {
       use <- wisp.require_method(req, http.Post)
       use formdata <- wisp.require_form(req)
       let result = {
@@ -58,7 +54,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       case result {
         Ok(path) -> {
           let assert Ok(file_content) = simplifile.read(from: path)
-          case recipe.from_xml(file_content) {
+          case recipe_routes.from_xml(file_content) {
             Ok(recipes) -> {
               string_tree.new()
               |> string_tree.append(

@@ -1,3 +1,8 @@
 pub type Recipe {
-  Recipe(ingredients: List(String), steps: List(String))
+  Recipe(
+    image: String,
+    ingredients: List(String),
+    steps: List(String),
+    title: String,
+  )
 }

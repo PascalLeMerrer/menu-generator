@@ -29,26 +29,32 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
   }
 
   let recipe_decoder: decode.Decoder(Recipe) = {
+    use image <- decode.field("imageurl", nested_string_decoder)
+
     use ingredients <- decode.optional_field(
       "ingredient",
       [],
       string_or_list_of_strings_decoder,
     )
+    let actual_ingredients =
+      ingredients
+      |> list.filter(fn(x) { x != "" })
     use steps <- decode.optional_field(
       "recipetext",
       [],
       string_or_list_of_strings_decoder,
     )
 
-    let actual_ingredients =
-      ingredients
-      |> list.filter(fn(x) { x != "" })
-
     let actual_steps =
       steps
       |> list.filter(fn(x) { x != "" })
-
-    decode.success(Recipe(actual_ingredients, actual_steps))
+    use title <- decode.field("title", nested_string_decoder)
+    decode.success(Recipe(
+      image:,
+      ingredients: actual_ingredients,
+      steps: actual_steps,
+      title:,
+    ))
   }
 
   let cookbook_decoder =

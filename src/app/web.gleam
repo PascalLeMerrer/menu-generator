@@ -1,9 +1,10 @@
 import gleam/bool
 import gleam/string_tree
+import sqlight.{type Connection}
 import wisp
 
 pub type Context {
-  Context(static_directory: String)
+  Context(static_directory: String, connection: Connection)
 }
 
 pub fn middleware(

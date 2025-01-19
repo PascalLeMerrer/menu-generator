@@ -1,7 +1,6 @@
 import app/router
+import app/services/recipes
 import app/web.{Context}
-import gleam/int
-
 import gleam/io
 import sqlight
 
@@ -31,7 +30,7 @@ pub fn main() {
   sqlite.with_connection(
     sqlite_database_filename,
     fn(db_connection: sqlight.Connection) -> Result(Nil, sqlight.Error) {
-      case db_connection |> create_table_if_not_exists_recipes {
+      case db_connection |> recipes.create_table_if_not_exists {
         Ok(_) -> db_connection |> start_server
         error -> {
           io.println_error("Exiting on a fatal error")
@@ -56,37 +55,4 @@ fn start_server(db_connection: sqlight.Connection) {
 
   process.sleep_forever()
   Ok(Nil)
-}
-
-fn create_table_if_not_exists_recipes(
-  db_connection: sqlight.Connection,
-) -> Result(Nil, sqlight.Error) {
-  "CREATE TABLE IF NOT EXISTS recipes (
-    image TEXT,
-    ingredients TEXT,
-    steps TEXT,
-    title TEXT
-  );"
-  |> sqlite.execute_raw_sql(db_connection)
-  |> io.debug
-  |> display_db_error
-}
-
-fn display_db_error(
-  result: Result(Nil, sqlight.Error),
-) -> Result(Nil, sqlight.Error) {
-  case result {
-    Ok(Nil) -> result
-    Error(error) -> {
-      let error_code =
-        error.code
-        |> sqlight.error_code_to_int
-        |> int.to_string
-
-      io.print_error(
-        "Database error: " <> error.message <> " (" <> error_code <> ")",
-      )
-      result
-    }
-  }
 }

@@ -1,6 +1,7 @@
 import app/pages
 import app/pages/layout.{layout}
 import app/routes/recipe_routes
+import app/services/recipes
 import app/web.{type Context}
 import gleam/http
 import gleam/int
@@ -23,7 +24,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   case wisp.path_segments(req) {
     // Homepage
     [] -> {
-      [pages.home()]
+      let all_recipes = recipes.get_all(ctx.connection)
+      [pages.home(all_recipes)]
       |> layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)
@@ -55,11 +57,12 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         Ok(path) -> {
           let assert Ok(file_content) = simplifile.read(from: path)
           case recipe_routes.from_xml(file_content) {
-            Ok(recipes) -> {
+            Ok(parsed_recipes) -> {
+              let _ = ctx.connection |> recipes.insert(parsed_recipes)
               string_tree.new()
               |> string_tree.append(
                 "<p>"
-                <> { list.length(recipes) |> int.to_string }
+                <> { list.length(parsed_recipes) |> int.to_string }
                 <> " recettes importées</p>",
               )
               |> wisp.html_response(200)

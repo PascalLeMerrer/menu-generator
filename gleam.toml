@@ -26,6 +26,7 @@ simplifile = ">= 2.2.0 and < 3.0.0"
 decode = ">= 1.1.0 and < 2.0.0"
 sqlight = ">= 1.0.0 and < 2.0.0"
 cake_sqlight = ">= 1.0.2 and < 2.0.0"
+cake = ">= 2.1.0 and < 3.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

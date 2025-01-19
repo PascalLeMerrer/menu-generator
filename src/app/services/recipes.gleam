@@ -12,8 +12,6 @@ import gleam/string
 
 import sqlight
 
-const separator = "@"
-
 pub fn create_table_if_not_exists(
   db_connection: sqlight.Connection,
 ) -> Result(Nil, sqlight.Error) {
@@ -50,10 +48,12 @@ pub fn insert(
 }
 
 fn join_lines(lines: List(String)) -> String {
-  string.join(lines, separator)
+  string.join(lines, recipe.separator)
 }
 
-pub fn get_all(db_connection: sqlight.Connection) {
+pub fn get_all(
+  db_connection: sqlight.Connection,
+) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   select.new()
   |> select.from_table("recipes")
   |> select.selects([select.col("title"), select.col("image")])

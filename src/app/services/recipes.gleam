@@ -6,7 +6,6 @@ import cake/select
 import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/string
 
@@ -53,26 +52,31 @@ fn join_lines(lines: List(String)) -> String {
 
 pub fn get_all(
   db_connection: sqlight.Connection,
-) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
+) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
   select.new()
   |> select.from_table("recipes")
-  |> select.selects([select.col("title"), select.col("image")])
+  |> select.selects([
+    select.col("image"),
+    select.col("ingredients"),
+    select.col("steps"),
+    select.col("title"),
+  ])
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
+  // |> io.debug
   |> db.display_db_error
   |> decode_recipes
-  |> io.debug
 }
 
 fn decode_recipes(
   rows: Result(List(dynamic.Dynamic), sqlight.Error),
-) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
-  let decoder: decode.Decoder(recipe.Recipe) = recipe.recipe_decoder()
+) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+  // let decoder: decode.Decoder(recipe.Recipe) = recipe.recipe_decoder()
 
   case rows {
     Ok(records) -> {
       records
-      |> list.map(fn(fields) { decode.run(fields, decoder) })
+      |> list.map(recipe.decode)
     }
 
     Error(sqlight.SqlightError(code, message, _)) -> {
@@ -82,7 +86,7 @@ fn decode_recipes(
         |> int.to_string
       [
         Error([
-          decode.DecodeError(
+          dynamic.DecodeError(
             expected: "",
             found: "Database error: " <> message <> " (" <> error_code <> ")",
             path: [""],

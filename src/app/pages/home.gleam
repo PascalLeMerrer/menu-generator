@@ -1,12 +1,12 @@
 import app/models/recipe
-import gleam/dynamic/decode
+import gleam/dynamic
 import gleam/list
 import lustre/attribute.{class}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, div, h1, li, ul}
 
 pub fn root(
-  recipes: List(Result(recipe.Recipe, List(decode.DecodeError))),
+  recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),
 ) -> Element(t) {
   div([class("app")], [
     h1([class("app-title")], [text("Générateur de menus")]),
@@ -16,7 +16,7 @@ pub fn root(
 }
 
 fn view_recipes(
-  decoded_recipes: List(Result(recipe.Recipe, List(decode.DecodeError))),
+  decoded_recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),
 ) -> Element(t) {
   ul(
     [],
@@ -26,7 +26,7 @@ fn view_recipes(
 }
 
 fn view_recipe(
-  maybe_recipe: Result(recipe.Recipe, List(decode.DecodeError)),
+  maybe_recipe: Result(recipe.Recipe, List(dynamic.DecodeError)),
 ) -> Element(t) {
   li([], case maybe_recipe {
     Error(_) -> {

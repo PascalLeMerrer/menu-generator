@@ -1,4 +1,4 @@
-import gleam/dynamic/decode
+import gleam/dynamic
 import gleam/string
 
 pub type Recipe {
@@ -12,16 +12,25 @@ pub type Recipe {
 
 pub const separator = "@"
 
-// TODO rename to decoder
-pub fn recipe_decoder() -> decode.Decoder(Recipe) {
-  use image <- decode.field("image", decode.string)
-  use ingredients <- decode.field("ingredients", decode.string)
-  use steps <- decode.field("steps", decode.string)
-  use title <- decode.field("title", decode.string)
-  decode.success(Recipe(
-    image:,
-    ingredients: ingredients |> string.split(separator),
-    steps: steps |> string.split(separator),
-    title:,
-  ))
+pub fn decode(
+  fields: dynamic.Dynamic,
+) -> Result(Recipe, List(dynamic.DecodeError)) {
+  let decoded_record =
+    fields
+    |> dynamic.tuple4(
+      dynamic.string,
+      dynamic.string,
+      dynamic.string,
+      dynamic.string,
+    )()
+  case decoded_record {
+    Ok(#(image, ingredients, steps, title)) ->
+      Ok(Recipe(
+        image: image,
+        ingredients: ingredients |> string.split(separator),
+        steps: steps |> string.split(separator),
+        title: title,
+      ))
+    Error(decoding_errors) -> Error(decoding_errors)
+  }
 }

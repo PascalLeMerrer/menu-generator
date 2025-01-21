@@ -19,7 +19,7 @@ fn view_recipes(
   decoded_recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),
 ) -> Element(t) {
   ul(
-    [],
+    [class("unstyled")],
     decoded_recipes
       |> list.map(fn(recipe) { view_recipe(recipe) }),
   )

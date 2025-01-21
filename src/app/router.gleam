@@ -4,7 +4,6 @@ import app/routes/recipe_routes
 import app/services/recipes
 import app/web.{type Context}
 import gleam/http
-import gleam/int
 import gleam/io
 import gleam/json.{
   UnableToDecode, UnexpectedByte, UnexpectedEndOfInput, UnexpectedFormat,
@@ -12,7 +11,6 @@ import gleam/json.{
 }
 import gleam/list
 import gleam/result
-import gleam/string_tree
 import simplifile
 
 import lustre/element

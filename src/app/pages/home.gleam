@@ -1,9 +1,9 @@
 import app/models/recipe
 import gleam/dynamic
 import gleam/list
-import lustre/attribute.{class}
+import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
-import lustre/element/html.{a, div, h1, li, ul}
+import lustre/element/html.{a, div, h1, img, li, ul}
 
 pub fn root(
   recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),
@@ -32,6 +32,16 @@ fn view_recipe(
     Error(_) -> {
       [text("Erreur de décodage de la recette ")]
     }
-    Ok(valid_recipe) -> [text(valid_recipe.title)]
+    Ok(valid_recipe) -> [
+      {
+        let image_url = case valid_recipe.image {
+          "" -> "/static/placeholder-100x100.png"
+          _ -> valid_recipe.image
+        }
+
+        img([src(image_url), height(100), width(100)])
+      },
+      text(valid_recipe.title),
+    ]
   })
 }

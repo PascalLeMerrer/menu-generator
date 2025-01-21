@@ -5,7 +5,7 @@ import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, div, h1, img, li, ul}
 
-pub fn root(
+pub fn index(
   recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),
 ) -> Element(t) {
   div([class("app")], [

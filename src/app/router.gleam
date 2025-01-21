@@ -40,7 +40,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["recipes", "upload"] -> {
       use <- wisp.require_method(req, http.Post)
       use formdata <- wisp.require_form(req)
-      let result = {
+      let result: Result(String, Nil) = {
         // Note the name of the input is used to find the value.
         use file <- result.try(list.key_find(formdata.files, "uploaded-file"))
 
@@ -59,12 +59,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           case recipe_routes.from_xml(file_content) {
             Ok(parsed_recipes) -> {
               let _ = ctx.connection |> recipes.insert(parsed_recipes)
-              string_tree.new()
-              |> string_tree.append(
-                "<p>"
-                <> { list.length(parsed_recipes) |> int.to_string }
-                <> " recettes importées</p>",
-              )
+              [pages.upload_result(parsed_recipes)]
+              |> layout
+              |> element.to_document_string_builder
               |> wisp.html_response(200)
             }
             Error(UnexpectedEndOfInput) -> {

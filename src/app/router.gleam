@@ -1,7 +1,7 @@
+import app/adapters/recipes
 import app/pages
 import app/pages/layout.{layout}
 import app/routes/recipe_routes
-import app/services/recipes
 import app/web.{type Context}
 import gleam/http
 import gleam/io

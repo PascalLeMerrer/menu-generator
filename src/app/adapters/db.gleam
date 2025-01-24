@@ -1,6 +1,16 @@
+import cake/adapter/sqlite
 import gleam/int
 import gleam/io
 import sqlight
+
+pub fn create_table_if_not_exists(
+  db_connection: sqlight.Connection,
+  schema: String,
+) -> Result(Nil, sqlight.Error) {
+  schema
+  |> sqlite.execute_raw_sql(db_connection)
+  |> display_db_error
+}
 
 pub fn display_db_error(
   result: Result(a, sqlight.Error),

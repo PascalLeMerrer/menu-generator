@@ -1,6 +1,6 @@
+import app/adapters/db
+import app/adapters/recipes
 import app/router
-import app/services/db
-import app/services/recipes
 import app/web.{Context}
 import gleam/io
 import sqlight

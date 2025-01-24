@@ -1,5 +1,5 @@
+import app/adapters/db
 import app/models/recipe
-import app/services/db
 import cake/adapter/sqlite
 import cake/insert
 import cake/select
@@ -11,18 +11,13 @@ import gleam/string
 
 import sqlight
 
-pub fn create_table_if_not_exists(
-  db_connection: sqlight.Connection,
-) -> Result(Nil, sqlight.Error) {
-  "CREATE TABLE IF NOT EXISTS recipes (
+pub const schema = "-- recipes that could be selected for new menus
+  CREATE TABLE IF NOT EXISTS recipes (
     image TEXT,
     ingredients TEXT,
     steps TEXT,
     title TEXT
   );"
-  |> sqlite.execute_raw_sql(db_connection)
-  |> db.display_db_error
-}
 
 pub fn insert(
   db_connection: sqlight.Connection,
@@ -31,15 +26,15 @@ pub fn insert(
   recipes
   |> list.map(fn(recipe) {
     [
-      insert.string(recipe.title),
-      insert.string(recipe.steps |> join_lines),
-      insert.string(recipe.ingredients |> join_lines),
       insert.string(recipe.image),
+      insert.string(recipe.ingredients |> join_lines),
+      insert.string(recipe.steps |> join_lines),
+      insert.string(recipe.title),
     ]
     |> insert.row
   })
   |> insert.from_values(table_name: "recipes", columns: [
-    "title", "steps", "ingredients", "image",
+    "image", "ingredients", "steps", "title",
   ])
   |> insert.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
@@ -63,7 +58,6 @@ pub fn get_all(
   ])
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
-  // |> io.debug
   |> db.display_db_error
   |> decode_recipes
 }
@@ -71,8 +65,6 @@ pub fn get_all(
 fn decode_recipes(
   rows: Result(List(dynamic.Dynamic), sqlight.Error),
 ) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
-  // let decoder: decode.Decoder(recipe.Recipe) = recipe.recipe_decoder()
-
   case rows {
     Ok(records) -> {
       records

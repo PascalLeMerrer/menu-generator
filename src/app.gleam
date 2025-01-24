@@ -1,4 +1,5 @@
 import app/router
+import app/services/db
 import app/services/recipes
 import app/web.{Context}
 import gleam/io
@@ -30,7 +31,7 @@ pub fn main() {
   sqlite.with_connection(
     sqlite_database_filename,
     fn(db_connection: sqlight.Connection) -> Result(Nil, sqlight.Error) {
-      case db_connection |> recipes.create_table_if_not_exists {
+      case db_connection |> db.create_table_if_not_exists(recipes.schema) {
         Ok(_) -> db_connection |> start_server
         error -> {
           io.println_error("Exiting on a fatal error")

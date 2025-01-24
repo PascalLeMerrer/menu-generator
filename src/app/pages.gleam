@@ -1,11 +1,16 @@
 import app/models/recipe
 import app/pages/home
+import app/pages/recipes
 import app/pages/upload
 import app/pages/upload_result
 import gleam/dynamic
 
-pub fn home(recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError)))) {
-  home.index(recipes)
+pub fn home() {
+  home.index()
+}
+
+pub fn recipes(recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError)))) {
+  recipes.index(recipes)
 }
 
 pub fn upload() {

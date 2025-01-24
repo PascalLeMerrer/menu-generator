@@ -22,8 +22,14 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   case wisp.path_segments(req) {
     // Homepage
     [] -> {
+      [pages.home()]
+      |> layout
+      |> element.to_document_string_builder
+      |> wisp.html_response(200)
+    }
+    ["recipes"] -> {
       let all_recipes = recipes.get_all(ctx.connection)
-      [pages.home(all_recipes)]
+      [pages.recipes(all_recipes)]
       |> layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)

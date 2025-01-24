@@ -3,7 +3,7 @@ import gleam/dynamic
 import gleam/list
 import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
-import lustre/element/html.{a, div, h1, img, li, ul}
+import lustre/element/html.{div, h1, img, li, ul}
 
 pub fn index(
   recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),

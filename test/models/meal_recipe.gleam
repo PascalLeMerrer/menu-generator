@@ -1,11 +1,6 @@
 import app/models/meal_recipe
 import gleam/dynamic
-import gleeunit
 import gleeunit/should
-
-pub fn main() {
-  gleeunit.main()
-}
 
 const title = "My selected recipe"
 

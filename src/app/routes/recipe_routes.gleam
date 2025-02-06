@@ -1,6 +1,7 @@
 import gleam/dynamic/decode
 import gleam/json
 import gleam/list
+import gleam/string
 import gleam/string_tree
 import xmljson
 
@@ -45,14 +46,13 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
       string_or_list_of_strings_decoder,
     )
 
-    let actual_steps =
-      steps
-      |> list.filter(fn(x) { x != "" })
     use title <- decode.field("title", nested_string_decoder)
     decode.success(Recipe(
       image:,
       ingredients: actual_ingredients,
-      steps: actual_steps,
+      steps: steps
+        |> list.filter(fn(x) { x != "" })
+        |> string.join(with: "\n"),
       title:,
     ))
   }

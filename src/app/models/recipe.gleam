@@ -2,12 +2,7 @@ import gleam/dynamic
 import gleam/string
 
 pub type Recipe {
-  Recipe(
-    image: String,
-    ingredients: List(String),
-    steps: List(String),
-    title: String,
-  )
+  Recipe(image: String, ingredients: List(String), steps: String, title: String)
 }
 
 pub const separator = "@"
@@ -28,7 +23,7 @@ pub fn decode(
       Ok(Recipe(
         image: image,
         ingredients: ingredients |> string.split(separator),
-        steps: steps |> string.split(separator),
+        steps: steps,
         title: title,
       ))
     Error(decoding_errors) -> Error(decoding_errors)

@@ -5,14 +5,14 @@ import gleeunit/should
 const oven_baked_bar = recipe.Recipe(
   image: "https://assets.afcdn.com/image1.jpg",
   ingredients: ["1 oignon", "1 citron"],
-  steps: ["Etape 1", "Etape 2"],
+  steps: "Etape 1\nEtape 2",
   title: "Bar au four",
 )
 
 const flan = recipe.Recipe(
   image: "https://assets.afcdn.com/image2.jpg",
   ingredients: ["1 flan", "1 pâté de campagne"],
-  steps: ["Etape A", "Etape B"],
+  steps: "Etape A\nEtape B",
   title: "Flan au pâté",
 )
 
@@ -203,7 +203,7 @@ pub fn from_xml_decodes_recipes_without_steps_test() {
    </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> should.equal(Ok([recipe.Recipe(..oven_baked_bar, steps: []), flan]))
+  |> should.equal(Ok([recipe.Recipe(..oven_baked_bar, steps: ""), flan]))
 }
 
 pub fn from_xml_decodes_cookbook_containing_one_recipe_only_test() {
@@ -269,5 +269,5 @@ pub fn from_xml_decodes_recipe_with_only_one_step_test() {
     </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> should.equal(Ok([recipe.Recipe(..oven_baked_bar, steps: ["Etape 1"])]))
+  |> should.equal(Ok([recipe.Recipe(..oven_baked_bar, steps: "Etape 1")]))
 }

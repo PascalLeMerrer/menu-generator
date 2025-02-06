@@ -28,7 +28,7 @@ pub fn insert(
     [
       insert.string(recipe.image),
       insert.string(recipe.ingredients |> join_lines),
-      insert.string(recipe.steps |> join_lines),
+      insert.string(recipe.steps),
       insert.string(recipe.title),
     ]
     |> insert.row

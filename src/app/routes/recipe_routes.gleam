@@ -1,9 +1,11 @@
 import gleam/dynamic/decode
 import gleam/json
 import gleam/list
+import gleam/option.{Some}
 import gleam/string
 import gleam/string_tree
 import xmljson
+import youid/uuid
 
 import app/models/recipe.{type Recipe, Recipe}
 
@@ -50,6 +52,7 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
     decode.success(Recipe(
       image:,
       ingredients: actual_ingredients,
+      meal_id: Some(uuid.v4()),
       steps: steps
         |> list.filter(fn(x) { x != "" })
         |> string.join(with: "\n"),

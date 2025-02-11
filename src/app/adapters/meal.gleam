@@ -13,8 +13,8 @@ import sqlight
 
 pub const schema = "
   CREATE TABLE IF NOT EXISTS meals (
-    date INTEGER,
-    menu_id INTEGER,
+    date INTEGER NOT NULL,
+    menu_id INTEGER NOT NULL,
   );"
 
 pub fn insert(

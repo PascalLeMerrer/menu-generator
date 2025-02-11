@@ -8,16 +8,19 @@ import gleam/dynamic/decode
 import gleam/int
 import gleam/list
 import gleam/string
+import youid/uuid
 
+import gleam/option.{None, Some}
 import sqlight
 
 pub const schema = "-- recipes that could be selected for new menus
   CREATE TABLE IF NOT EXISTS recipes (
-    image TEXT,
-    ingredients TEXT,
-    steps TEXT,
-    title TEXT
-  );"
+    image TEXT NOT NULL,
+    ingredients TEXT NOT NULL,
+    meal_id TEXT,
+    steps TEXT NOT NULL,
+    title TEXT NOT NULL
+    );"
 
 pub fn insert(
   db_connection: sqlight.Connection,
@@ -28,6 +31,10 @@ pub fn insert(
     [
       insert.string(recipe.image),
       insert.string(recipe.ingredients |> join_lines),
+      case recipe.meal_id {
+        Some(id) -> insert.string(id |> uuid.to_string)
+        None -> insert.null()
+      },
       insert.string(recipe.steps),
       insert.string(recipe.title),
     ]
@@ -53,6 +60,7 @@ pub fn get_all(
   |> select.selects([
     select.col("image"),
     select.col("ingredients"),
+    select.col("meal_id"),
     select.col("steps"),
     select.col("title"),
   ])

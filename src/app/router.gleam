@@ -62,7 +62,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           let assert Ok(file_content) = simplifile.read(from: path)
           case recipe_routes.from_xml(file_content) {
             Ok(parsed_recipes) -> {
-              let _ = ctx.connection |> recipes.insert(parsed_recipes)
+              let _ = ctx.connection |> recipes.bulk_insert(parsed_recipes)
               [pages.upload_result(parsed_recipes)]
               |> layout
               |> element.to_document_string_builder

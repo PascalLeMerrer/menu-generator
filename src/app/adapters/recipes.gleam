@@ -22,7 +22,7 @@ pub const schema = "-- recipes that could be selected for new menus
     title TEXT NOT NULL
     );"
 
-pub fn insert(
+pub fn bulk_insert(
   db_connection: sqlight.Connection,
   recipes: List(recipe.Recipe),
 ) -> Result(List(dynamic.Dynamic), sqlight.Error) {
@@ -33,6 +33,7 @@ pub fn insert(
       insert.string(recipe.ingredients |> join_lines),
       case recipe.meal_id {
         Some(id) -> insert.string(id |> uuid.to_string)
+        // FIXME: les recettes importées ne devraient pas avoir de meal_id
         None -> insert.null()
       },
       insert.string(recipe.steps),
@@ -41,7 +42,7 @@ pub fn insert(
     |> insert.row
   })
   |> insert.from_values(table_name: "recipes", columns: [
-    "image", "ingredients", "steps", "title",
+    "image", "ingredients", "meal_id", "steps", "title",
   ])
   |> insert.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)

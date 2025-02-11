@@ -1,12 +1,11 @@
-import bseal/time
-import bseal/uuid48
 import gleam/dynamic
 import gleam/list
 import tempo
 import tempo/datetime
+import youid/uuid
 
 pub type Meal {
-  Meal(date: tempo.DateTime, menu_id: Int)
+  Meal(date: tempo.DateTime, menu_id: String)
 }
 
 pub fn decode(
@@ -14,7 +13,7 @@ pub fn decode(
 ) -> Result(Meal, List(dynamic.DecodeError)) {
   let decoded_record =
     fields
-    |> dynamic.tuple2(dynamic.int, dynamic.int)()
+    |> dynamic.tuple2(dynamic.int, dynamic.string)()
   case decoded_record {
     Ok(#(date, menu_id)) ->
       Ok(Meal(date |> datetime.from_unix_seconds, menu_id))
@@ -23,9 +22,8 @@ pub fn decode(
 }
 
 pub fn for_dates(dates: List(tempo.DateTime)) -> List(Meal) {
+  let uuid = uuid.v4_string()
+
   dates
-  |> list.map(fn(date: tempo.DateTime) {
-    let assert Ok(uuid) = uuid48.start(nodeid: 1, epoch: time.now())
-    Meal(date: date, menu_id: uuid |> uuid48.int())
-  })
+  |> list.map(fn(date: tempo.DateTime) { Meal(date: date, menu_id: uuid) })
 }

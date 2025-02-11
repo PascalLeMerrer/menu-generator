@@ -2,7 +2,6 @@
 # You typically do not need to edit this file
 
 packages = [
-  { name = "bseal", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_otp", "gleam_stdlib"], otp_app = "bseal", source = "hex", outer_checksum = "F2ECCEACE123A6CC6B517A03040FDD1DF3C0954591AEF394BA8B9B26DA9DC971" },
   { name = "cake", version = "2.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "cake", source = "hex", outer_checksum = "141FEBE63A3BBD2872232BBB61B83E75F9367A4C07DD825286D58AF8D86D7702" },
   { name = "cake_sqlight", version = "1.1.1", build_tools = ["gleam"], requirements = ["cake", "gleam_stdlib", "sqlight"], otp_app = "cake_sqlight", source = "hex", outer_checksum = "AF08909B94A755DFBB47BD92454C1A3FAA87611C2536B70F8274D70BFC87A0EC" },
   { name = "decode", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "decode", source = "hex", outer_checksum = "9FFAD3F60600C6777072C3836B9FD965961D7C76C5D6007918AE0F82C1B21BE3" },
@@ -37,10 +36,10 @@ packages = [
   { name = "xmb", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "xmb", source = "hex", outer_checksum = "4208BA23FB9BAA000FB506A16421BE66EF6BAAB015B1E00EC970FE1CCB40980E" },
   { name = "xmljson", version = "0.2.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib", "xmb", "xmlm"], otp_app = "xmljson", source = "hex", outer_checksum = "231B7EF571DCDEE0F25F64ED1A346658AA65051BD28DF3F8CC7E94A8CDB39848" },
   { name = "xmlm", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "xmlm", source = "hex", outer_checksum = "295F483E1A930DC4C45ED0F07C3466C0A7381972C3C2FC64D66BD2FBB307ED6A" },
+  { name = "youid", version = "1.2.0", build_tools = ["gleam"], requirements = ["gleam_crypto", "gleam_erlang", "gleam_stdlib"], otp_app = "youid", source = "hex", outer_checksum = "EF0F693004E221155EE5909C6D3C945DD14F7117DBA882887CF5F45BE399B8CA" },
 ]
 
 [requirements]
-bseal = { version = ">= 1.1.0 and < 2.0.0" }
 cake = { version = ">= 2.1.0 and < 3.0.0" }
 cake_sqlight = { version = ">= 1.0.2 and < 2.0.0" }
 decode = { version = ">= 1.1.0 and < 2.0.0" }
@@ -57,3 +56,4 @@ simplifile = { version = ">= 2.2.0 and < 3.0.0" }
 sqlight = { version = ">= 1.0.0 and < 2.0.0" }
 wisp = { version = ">= 1.3.0 and < 2.0.0" }
 xmljson = { version = ">= 0.2.0 and < 1.0.0" }
+youid = { version = ">= 1.2.0 and < 2.0.0" }

@@ -25,7 +25,7 @@ pub fn insert(
   |> list.map(fn(meal) {
     [
       insert.int(meal.date |> datetime.to_unix_seconds),
-      insert.int(meal.menu_id),
+      insert.string(meal.menu_id),
     ]
     |> insert.row
   })

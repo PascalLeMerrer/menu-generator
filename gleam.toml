@@ -28,7 +28,7 @@ sqlight = ">= 1.0.0 and < 2.0.0"
 cake_sqlight = ">= 1.0.2 and < 2.0.0"
 cake = ">= 2.1.0 and < 3.0.0"
 gtempo = ">= 6.1.2 and < 7.0.0"
-bseal = ">= 1.1.0 and < 2.0.0"
+youid = ">= 1.2.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

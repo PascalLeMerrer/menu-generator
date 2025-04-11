@@ -7,10 +7,10 @@ import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/int
 import gleam/list
+import gleam/option.{None, Some}
 import gleam/string
 import youid/uuid
 
-import gleam/option.{None, Some}
 import sqlight
 
 pub const schema = "-- recipes that could be selected for new menus
@@ -19,21 +19,22 @@ pub const schema = "-- recipes that could be selected for new menus
     ingredients TEXT NOT NULL,
     meal_id TEXT,
     steps TEXT NOT NULL,
-    title TEXT NOT NULL
+    title TEXT NOT NULL,
+    FOREIGN KEY(meal_id) REFERENCES meal(uuid)
     );"
 
 pub fn bulk_insert(
-  db_connection: sqlight.Connection,
   recipes: List(recipe.Recipe),
+  db_connection: sqlight.Connection,
 ) -> Result(List(dynamic.Dynamic), sqlight.Error) {
   recipes
   |> list.map(fn(recipe) {
     [
       insert.string(recipe.image),
       insert.string(recipe.ingredients |> join_lines),
+      // imported recipes are not linked to any meal
       case recipe.meal_id {
         Some(id) -> insert.string(id |> uuid.to_string)
-        // FIXME: les recettes importées ne devraient pas avoir de meal_id
         None -> insert.null()
       },
       insert.string(recipe.steps),
@@ -65,6 +66,28 @@ pub fn get_all(
     select.col("steps"),
     select.col("title"),
   ])
+  |> select.to_query
+  |> sqlite.run_read_query(decode.dynamic, db_connection)
+  |> db.display_db_error
+  |> decode_recipes
+}
+
+pub fn get_random(
+  db_connection: sqlight.Connection,
+  count: Int,
+  // 0 will return all recipes
+) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+  select.new()
+  |> select.from_table("recipes")
+  |> select.selects([
+    select.col("image"),
+    select.col("ingredients"),
+    select.col("meal_id"),
+    select.col("steps"),
+    select.col("title"),
+  ])
+  |> select.order_by(by: "RANDOM()", direction: select.Asc)
+  |> select.limit(count)
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error

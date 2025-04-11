@@ -2,6 +2,7 @@ import app/adapters/recipes
 import app/pages
 import app/pages/layout.{layout}
 import app/routes/recipe_routes
+import app/services/meals
 import app/web.{type Context}
 import gleam/http
 import gleam/io
@@ -27,15 +28,38 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
-    ["recipes"] -> {
-      let all_recipes = recipes.get_all(ctx.connection)
-      [pages.recipes(all_recipes)]
+    ["import"] -> {
+      [pages.upload()]
       |> layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
-    ["import"] -> {
-      [pages.upload()]
+    ["meals"] -> {
+      use <- wisp.require_method(req, http.Post)
+      let meals = meals.generate_random_meals(ctx)
+      case meals {
+        Ok(generated_meals) ->
+          [pages.generated_meals(generated_meals)]
+          |> layout
+          |> element.to_document_string_builder
+          |> wisp.html_response(200)
+        Error(error_message) ->
+          [pages.error(error_message)]
+          // TODO factorize the 3 next lines into a render function? Wait for HTMX to be in place
+          |> layout
+          |> element.to_document_string_builder
+          |> wisp.html_response(200)
+      }
+    }
+    ["new-meals"] -> {
+      [pages.new_meals()]
+      |> layout
+      |> element.to_document_string_builder
+      |> wisp.html_response(200)
+    }
+    ["recipes"] -> {
+      let all_recipes = recipes.get_all(ctx.connection)
+      [pages.recipes(all_recipes)]
       |> layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)
@@ -62,7 +86,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           let assert Ok(file_content) = simplifile.read(from: path)
           case recipe_routes.from_xml(file_content) {
             Ok(parsed_recipes) -> {
-              let _ = ctx.connection |> recipes.bulk_insert(parsed_recipes)
+              let _ = parsed_recipes |> recipes.bulk_insert(ctx.connection)
               [pages.upload_result(parsed_recipes)]
               |> layout
               |> element.to_document_string_builder

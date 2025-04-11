@@ -6,15 +6,18 @@ import cake/select
 import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/int
+import gleam/io
 import gleam/list
 import tempo/datetime
+import youid/uuid
 
 import sqlight
 
 pub const schema = "
   CREATE TABLE IF NOT EXISTS meals (
     date INTEGER NOT NULL,
-    menu_id INTEGER NOT NULL,
+    menu_id TEXT NOT NULL,
+    uuid TEXT PRIMARY KEY
   );"
 
 pub fn insert(
@@ -25,13 +28,17 @@ pub fn insert(
   |> list.map(fn(meal) {
     [
       insert.int(meal.date |> datetime.to_unix_seconds),
-      insert.string(meal.menu_id),
+      insert.string(meal.menu_id |> uuid.to_string),
+      insert.string(meal.uuid |> uuid.to_string),
     ]
     |> insert.row
   })
-  |> insert.from_values(table_name: "meals", columns: ["date", "menu_id"])
+  |> insert.from_values(table_name: "meals", columns: [
+    "date", "menu_id", "uuid",
+  ])
   |> insert.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
+  |> io.debug
   |> db.display_db_error
 }
 
@@ -40,7 +47,11 @@ pub fn get_all(
 ) -> List(Result(meal.Meal, List(dynamic.DecodeError))) {
   select.new()
   |> select.from_table("meals")
-  |> select.selects([select.col("date"), select.col("menu_id")])
+  |> select.selects([
+    select.col("date"),
+    select.col("menu_id"),
+    select.col("uuid"),
+  ])
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error

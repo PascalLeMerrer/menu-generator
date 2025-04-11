@@ -1,8 +1,10 @@
 import app/adapters/db
+import app/adapters/meal
 import app/adapters/recipes
 import app/router
 import app/web.{Context}
 import gleam/io
+import gleam/result
 import sqlight
 
 import cake/adapter/sqlite
@@ -28,18 +30,19 @@ pub fn main() {
   |> dot_env.set_debug(False)
   |> dot_env.load
 
-  sqlite.with_connection(
-    sqlite_database_filename,
-    fn(db_connection: sqlight.Connection) -> Result(Nil, sqlight.Error) {
-      case db_connection |> db.create_table_if_not_exists(recipes.schema) {
-        Ok(_) -> db_connection |> start_server
-        error -> {
-          io.println_error("Exiting on a fatal error")
-          error
-        }
+  sqlite.with_connection(sqlite_database_filename, fn(db_connection) {
+    let table_creation_results = [
+      db_connection |> db.create_table_if_not_exists(recipes.schema),
+      db_connection |> db.create_table_if_not_exists(meal.schema),
+    ]
+    case table_creation_results |> result.all() {
+      Ok(_) -> db_connection |> start_server
+      error -> {
+        io.println_error("Exiting on a fatal error")
+        error
       }
-    },
-  )
+    }
+  })
 }
 
 fn start_server(db_connection: sqlight.Connection) {
@@ -55,5 +58,5 @@ fn start_server(db_connection: sqlight.Connection) {
     |> mist.start_http
 
   process.sleep_forever()
-  Ok(Nil)
+  Ok([Nil])
 }

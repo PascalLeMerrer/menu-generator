@@ -14,7 +14,9 @@ import app/web.{type Context}
 
 // Generates a list of meals, each one including a single, random recipe
 // TODO pass the start date and end date as parameters
-pub fn generate_random_meals(ctx: Context) -> Result(List(meal.Meal), String) {
+pub fn generate_random_meals(
+  ctx: Context,
+) -> Result(List(#(meal.Meal, recipe.Recipe)), String) {
   let meals = meal.for_dates(dates())
   case meal_adapter.insert(ctx.connection, meals) {
     Error(_) -> Error("Erreur d'enregistrement des repas")
@@ -30,7 +32,7 @@ pub fn generate_random_meals(ctx: Context) -> Result(List(meal.Meal), String) {
             |> recipe.add_recipes_to_meals(meals)
             |> recipes.bulk_insert(ctx.connection)
           case cloned_recipes {
-            Ok(_) -> Ok(meals)
+            Ok(_) -> Ok(list.zip(meals, valid_recipes))
             Error(_) -> Error("Erreur lors de la copie des recettes")
           }
         }

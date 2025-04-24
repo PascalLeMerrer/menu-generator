@@ -8,12 +8,13 @@ import app/pages/recipes
 import app/pages/upload
 import app/pages/upload_result
 import gleam/dynamic
+import lustre/element.{type Element}
 
 pub fn error(error_message) {
   error.index(error_message)
 }
 
-pub fn generated_meals(meals: List(meal.Meal)) {
+pub fn generated_meals(meals: List(#(meal.Meal, recipe.Recipe))) {
   generated_meals.index(meals)
 }
 
@@ -21,7 +22,7 @@ pub fn home() {
   home.index()
 }
 
-pub fn new_meals() {
+pub fn new_meals() -> Element(a) {
   new_meals.index()
 }
 

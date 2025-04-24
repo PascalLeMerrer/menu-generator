@@ -21,7 +21,6 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   use _req <- web.middleware(req, ctx)
 
   case wisp.path_segments(req) {
-    // Homepage
     [] -> {
       [pages.home()]
       |> layout
@@ -44,23 +43,20 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           |> element.to_document_string_builder
           |> wisp.html_response(200)
         Error(error_message) ->
-          [pages.error(error_message)]
-          // TODO factorize the 3 next lines into a render function? Wait for HTMX to be in place
-          |> layout
+          pages.error(error_message)
+          // TODO factorize the next lines into a render function? Wait for HTMX to be in place
           |> element.to_document_string_builder
           |> wisp.html_response(200)
       }
     }
     ["new-meals"] -> {
-      [pages.new_meals()]
-      |> layout
+      pages.new_meals()
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
     ["recipes"] -> {
       let all_recipes = recipes.get_all(ctx.connection)
-      [pages.recipes(all_recipes)]
-      |> layout
+      pages.recipes(all_recipes)
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }

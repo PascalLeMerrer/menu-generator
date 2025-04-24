@@ -1,13 +1,14 @@
 import app/models/meal
+import app/models/recipe
 import gleam/list
-import lustre/attribute.{class}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h1, li, ul}
-import youid/uuid
+import tempo
+import tempo/datetime
 
-pub fn index(meals: List(meal.Meal)) -> Element(t) {
-  div([class("app")], [
-    h1([class("app-title")], [text("Menus proposés")]),
+pub fn index(meals: List(#(meal.Meal, recipe.Recipe))) -> Element(t) {
+  div([], [
+    h1([], [text("Menus proposés")]),
     ul(
       [],
       meals
@@ -16,6 +17,8 @@ pub fn index(meals: List(meal.Meal)) -> Element(t) {
   ])
 }
 
-fn view_meal(meal: meal.Meal) -> Element(t) {
-  li([], [text(meal.uuid |> uuid.to_string())])
+fn view_meal(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
+  let #(meal, recipe) = meal_and_recipe
+  let date = meal.date |> datetime.format(tempo.Custom("ddd"))
+  li([], [text(date), text(" "), text(recipe.title)])
 }

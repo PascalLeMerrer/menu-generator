@@ -43,3 +43,18 @@ nav {
   gap: 30px;
   margin-bottom: 30px;
 }
+
+
+
+.generated_menu{
+  display: grid;
+  grid-template-columns: 1fr 1fr 5fr;
+  margin: 10px;
+  border: 1px solid #444444;
+}
+
+
+.generated_menu > * {
+  padding: 5px;
+}
+

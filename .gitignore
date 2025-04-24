@@ -4,3 +4,6 @@
 /build
 erl_crash.dump
 recipes.sqlite3
+TODO.md
+minimal.xml
+mycookbookrecipes.xml

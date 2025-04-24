@@ -2,13 +2,13 @@ import app/models/meal
 import app/models/recipe
 import gleam/list
 import lustre/element.{type Element, text}
-import lustre/element/html.{div, h1, li, ul}
+import lustre/element/html.{div, h2, li, ul}
 import tempo
 import tempo/datetime
 
 pub fn index(meals: List(#(meal.Meal, recipe.Recipe))) -> Element(t) {
   div([], [
-    h1([], [text("Menus proposés")]),
+    h2([], [text("Menus proposés")]),
     ul(
       [],
       meals

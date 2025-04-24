@@ -36,3 +36,10 @@ body {
 ul.unstyled {
   list-style-type: none;
 }
+
+nav {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  margin-bottom: 30px;
+}

@@ -3,6 +3,7 @@ import app/models/meal
 import cake/adapter/sqlite
 import cake/insert
 import cake/select
+import cake/where
 import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/int
@@ -52,6 +53,25 @@ pub fn get_all(
     select.col("menu_id"),
     select.col("uuid"),
   ])
+  |> select.to_query
+  |> sqlite.run_read_query(decode.dynamic, db_connection)
+  |> db.display_db_error
+  |> decode_meals
+}
+
+pub fn get(
+  meal_id: uuid.Uuid,
+  db_connection: sqlight.Connection,
+) -> List(Result(meal.Meal, List(dynamic.DecodeError))) {
+  let uuid = meal_id |> uuid.to_string
+  select.new()
+  |> select.from_table("meals")
+  |> select.selects([
+    select.col("date"),
+    select.col("menu_id"),
+    select.col("uuid"),
+  ])
+  |> select.where(where.col("uuid") |> where.eq(where.string(uuid)))
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error

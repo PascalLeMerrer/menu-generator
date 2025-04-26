@@ -1,5 +1,6 @@
 import app/adapters/recipes
 import app/pages
+import app/pages/generated_meals
 import app/pages/layout.{layout}
 import app/routes/recipe_routes
 import app/services/meals
@@ -13,6 +14,7 @@ import gleam/json.{
 import gleam/list
 import gleam/result
 import simplifile
+import youid/uuid
 
 import lustre/element
 import wisp.{type Request, type Response}
@@ -47,6 +49,34 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           // TODO factorize the next lines into a render function? Wait for HTMX to be in place
           |> element.to_document_string_builder
           |> wisp.html_response(200)
+      }
+    }
+    ["replace-recipe"] -> {
+      use req <- web.middleware(req, ctx)
+      use formdata <- wisp.require_form(req)
+
+      let parsed_meal_id = {
+        use meal_id <- result.try(list.key_find(formdata.values, "meal_id"))
+        use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
+        Ok(parsed_meal_id)
+      }
+
+      case parsed_meal_id {
+        Ok(valid_meal_id) -> {
+          let meals = meals.replace_recipe(ctx, valid_meal_id)
+
+          case meals {
+            Ok([generated_meals]) ->
+              [generated_meals.view_meal(generated_meals)]
+              |> layout
+              |> element.to_document_string_builder
+              |> wisp.html_response(200)
+            Error(message) -> error_message(message)
+            Ok([]) -> error_message("aucun menu généré")
+            Ok([_, _, ..]) -> error_message("multiples menus générés")
+          }
+        }
+        Error(_) -> error_message("l'identifiant du repas est invalide")
       }
     }
     ["new-meals"] -> {
@@ -124,4 +154,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["bad-request"] -> wisp.bad_request()
     _ -> wisp.not_found()
   }
+}
+
+fn error_message(message: String) -> Response {
+  pages.error("Erreur : " <> message)
+  |> element.to_document_string_builder
+  |> wisp.html_response(200)
 }

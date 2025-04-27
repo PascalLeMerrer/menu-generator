@@ -9,6 +9,7 @@ import tempo/instant
 import youid/uuid
 
 import app/adapters/meal as meal_adapter
+import app/adapters/recipes as recipe_adapter
 import app/models/meal
 import app/models/recipe
 import app/web.{type Context}
@@ -37,13 +38,14 @@ fn add_random_recipes_to_meals(
     |> result.partition
   case random_recipes, decoding_errors {
     valid_recipes, [] -> {
-      let cloned_recipes =
+      let maybe_cloned_recipes =
         valid_recipes
         |> recipe.add_recipes_to_meals(meals)
         |> recipes.bulk_insert(ctx.connection)
-      case cloned_recipes {
-        Ok(_) -> Ok(list.zip(meals, valid_recipes))
-        Error(_) -> Error("Erreur lors de la copie des recettes")
+        |> result.partition
+      case maybe_cloned_recipes {
+        #(cloned_recipes, []) -> Ok(list.zip(meals, cloned_recipes))
+        #(_, [_, ..]) -> Error("Erreur lors de la copie des recettes")
       }
     }
     _, _ -> Error("Erreur lors de la lecture des recettes à copier")
@@ -72,10 +74,22 @@ fn dates() -> List(tempo.DateTime) {
 pub fn replace_recipe(
   ctx: Context,
   meal_id: uuid.Uuid,
+  recipe_id: uuid.Uuid,
 ) -> Result(List(#(meal.Meal, recipe.Recipe)), String) {
   let meal = meal_adapter.get(meal_id, ctx.connection)
+
   case meal {
-    [Ok(valid_meal)] -> add_random_recipes_to_meals(ctx, [valid_meal])
+    [Ok(valid_meal)] -> {
+      let selected_recipes = add_random_recipes_to_meals(ctx, [valid_meal])
+      case selected_recipes {
+        Ok(_) -> {
+          let _ = recipe_adapter.delete_(recipe_id, ctx.connection)
+
+          selected_recipes
+        }
+        Error(_) -> selected_recipes
+      }
+    }
     _ -> Error("Erreur lors de la lecture du repas à modifier")
   }
 }

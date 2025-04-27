@@ -1,6 +1,7 @@
 import app/adapters/db
 import app/models/meal
 import cake/adapter/sqlite
+import cake/delete
 import cake/insert
 import cake/select
 import cake/where
@@ -76,6 +77,19 @@ pub fn get(
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
   |> decode_meals
+}
+
+pub fn delete_(
+  uuid: uuid.Uuid,
+  db_connection: sqlight.Connection,
+) -> Result(List(dynamic.Dynamic), sqlight.Error) {
+  let uuid = uuid |> uuid.to_string
+  delete.new()
+  |> delete.table("meals")
+  |> delete.where(where.col("uuid") |> where.eq(where.string(uuid)))
+  |> delete.to_query
+  |> sqlite.run_write_query(decode.dynamic, db_connection)
+  |> db.display_db_error
 }
 
 fn decode_meals(

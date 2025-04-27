@@ -35,3 +35,11 @@ fn view_recipe(
     ]
   })
 }
+
+pub fn view_ingredients(recipe: recipe.Recipe) -> Element(t) {
+  ul(
+    [],
+    recipe.ingredients
+      |> list.map(fn(ingredient) { li([], [text(ingredient)]) }),
+  )
+}

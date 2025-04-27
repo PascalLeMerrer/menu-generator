@@ -17,7 +17,7 @@ body {
   padding: 0 20px;
   margin: 20px auto 0;
   width: 100%;
-  max-width: 512px;
+  max-width: 700px;
 }
 
 .app-header {
@@ -44,17 +44,45 @@ nav {
   margin-bottom: 30px;
 }
 
-
-
 .generated_menu{
   display: grid;
-  grid-template-columns: 100px 100px auto 100px;
+  grid-template-columns: 100px 100px 300px 100px;
   margin: 10px;
   border: 1px solid #444444;
 }
 
-
 .generated_menu > * {
   padding: 5px;
 }
+
+.generated_menu .date {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.generated_menu .image {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.generated_menu .title {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.generated_menu .actions {
+  grid-column: 4;
+  grid-row: 1;
+  cursor:pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.generated_menu .ingredients {
+  grid-column: 1/4;
+  grid-row: 2;
+}
+
+
 

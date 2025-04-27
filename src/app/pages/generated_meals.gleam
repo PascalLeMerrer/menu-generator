@@ -4,7 +4,7 @@ import gleam/json
 import gleam/list
 import gleam/option
 import hx
-import lustre/attribute.{class, height, id, src, width}
+import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h2, img, span}
 import tempo
@@ -30,20 +30,45 @@ pub fn view_meal(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
     _ -> recipe.image
   }
   let meal_id = generated_meal.uuid |> uuid.to_string()
+  let recipe_id =
+    recipe.uuid |> echo |> option.map(uuid.to_string) |> option.unwrap("")
+
   div([class("generated_menu")], [
-    span([], [text(date)]),
-    img([src(image_url), height(100), width(100)]),
-    span([], [text(recipe.title)]),
-    span(
-      [
-        hx.post("replace-recipe"),
-        hx.vals(json.object([#("meal_id", meal_id |> json.string)]), False),
-        // the closest div, i.e. the parent
-        hx.target(hx.CssSelector("closest div")),
-        hx.swap(hx.OuterHTML, option.None),
-      ],
-      [text("Remplacer")],
-    ),
+    span([class("date")], [text(date)]),
+    img([class("image"), src(image_url), height(100), width(100)]),
+    span([class("title")], [text(recipe.title)]),
+    div([class("actions")], [
+      span(
+        [
+          class(""),
+          hx.post("replace-recipe"),
+          hx.vals(
+            json.object([
+              #("meal_id", meal_id |> json.string),
+              #("recipe_id", recipe_id |> json.string),
+            ]),
+            False,
+          ),
+          // the closest div, i.e. the parent
+          hx.target(hx.CssSelector("closest .generated_menu")),
+          hx.swap(hx.OuterHTML, option.None),
+        ],
+        [text("Remplacer")],
+      ),
+      span(
+        [
+          class(""),
+          hx.post("recipe-ingredients"),
+          hx.vals(
+            json.object([#("recipe_id", recipe_id |> json.string)]),
+            False,
+          ),
+          hx.target(hx.CssSelector("next .ingredients")),
+        ],
+        [text("Ingrédients")],
+      ),
+    ]),
+    div([class("ingredients")], []),
   ])
 }
 

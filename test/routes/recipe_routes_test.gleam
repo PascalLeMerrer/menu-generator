@@ -6,16 +6,18 @@ import gleam/result
 import gleeunit/should
 import youid/uuid
 
-const uuid1: String = "dff0d722-8b82-46fa-a418-a3881e0cce46"
+const uuid1: String = "1ff0d722-8b82-46fa-a418-a3881e0cce46"
 
 fn oven_baked_bar() {
-  let assert Ok(uuid) = uuid.from_string(uuid1)
+  let assert Ok(meal_id) = uuid.from_string(uuid1)
+
   recipe.Recipe(
     image: "https://assets.afcdn.com/image1.jpg",
     ingredients: ["1 oignon", "1 citron"],
-    meal_id: Some(uuid),
+    meal_id: Some(meal_id),
     steps: "Etape 1\nEtape 2",
     title: "Bar au four",
+    uuid: option.None,
   )
 }
 
@@ -27,6 +29,7 @@ fn flan() {
     meal_id: Some(uuid),
     steps: "Etape A\nEtape B",
     title: "Flan au pâté",
+    uuid: option.None,
   )
 }
 

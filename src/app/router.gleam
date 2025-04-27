@@ -1,7 +1,8 @@
-import app/adapters/recipes
+import app/adapters/recipes as recipe_adapter
 import app/pages
 import app/pages/generated_meals
 import app/pages/layout.{layout}
+import app/pages/recipes
 import app/routes/recipe_routes
 import app/services/meals
 import app/web.{type Context}
@@ -54,16 +55,17 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["replace-recipe"] -> {
       use req <- web.middleware(req, ctx)
       use formdata <- wisp.require_form(req)
-
-      let parsed_meal_id = {
+      let parsed_parameters = {
         use meal_id <- result.try(list.key_find(formdata.values, "meal_id"))
         use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
-        Ok(parsed_meal_id)
+        use recipe_id <- result.try(list.key_find(formdata.values, "recipe_id"))
+        use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+        Ok(#(parsed_meal_id, parsed_recipe_id))
       }
 
-      case parsed_meal_id {
-        Ok(valid_meal_id) -> {
-          let meals = meals.replace_recipe(ctx, valid_meal_id)
+      case parsed_parameters {
+        Ok(#(valid_meal_id, parsed_recipe_id)) -> {
+          let meals = meals.replace_recipe(ctx, valid_meal_id, parsed_recipe_id)
 
           case meals {
             Ok([generated_meals]) ->
@@ -76,7 +78,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             Ok([_, _, ..]) -> error_message("multiples menus générés")
           }
         }
-        Error(_) -> error_message("l'identifiant du repas est invalide")
+        Error(_) ->
+          error_message("l'identifiant du repas ou de la recette est invalide")
       }
     }
     ["new-meals"] -> {
@@ -84,8 +87,38 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
+    ["recipe-ingredients"] -> {
+      use req <- web.middleware(req, ctx)
+      use formdata <- wisp.require_form(req)
+
+      let parsed_recipe_id = {
+        use recipe_id <- result.try(list.key_find(formdata.values, "recipe_id"))
+        use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+        Ok(parsed_recipe_id)
+      }
+
+      case parsed_recipe_id {
+        Ok(valid_meal_id) -> {
+          let recipe =
+            recipe_adapter.find_by_id(ctx.connection, valid_meal_id)
+            |> io.debug
+
+          case recipe {
+            [Ok(valid_recipe)] ->
+              [recipes.view_ingredients(valid_recipe)]
+              |> layout
+              |> element.to_document_string_builder
+              |> wisp.html_response(200)
+            [Error(_)] -> error_message("ingrédients non trouvés 1")
+            [] -> error_message("ingrédients non trouvés 2")
+            [_, _, ..] -> error_message("ingrédients non trouvés 3")
+          }
+        }
+        Error(_) -> error_message("l'identifiant du repas est invalide")
+      }
+    }
     ["recipes"] -> {
-      let all_recipes = recipes.get_all(ctx.connection)
+      let all_recipes = recipe_adapter.get_all(ctx.connection)
       pages.recipes(all_recipes)
       |> element.to_document_string_builder
       |> wisp.html_response(200)
@@ -112,7 +145,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           let assert Ok(file_content) = simplifile.read(from: path)
           case recipe_routes.from_xml(file_content) {
             Ok(parsed_recipes) -> {
-              let _ = parsed_recipes |> recipes.bulk_insert(ctx.connection)
+              let _ =
+                parsed_recipes |> recipe_adapter.bulk_insert(ctx.connection)
               [pages.upload_result(parsed_recipes)]
               |> layout
               |> element.to_document_string_builder

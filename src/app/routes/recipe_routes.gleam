@@ -56,6 +56,7 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
         |> list.filter(fn(x) { x != "" })
         |> string.join(with: "\n"),
       title:,
+      uuid: None,
     ))
   }
 

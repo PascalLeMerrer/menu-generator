@@ -6,6 +6,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/string
 import youid/uuid
 
+// uuid is not None if and only if the recipe instance is attached to a meal
 pub type Recipe {
   Recipe(
     image: String,
@@ -13,6 +14,7 @@ pub type Recipe {
     meal_id: Option(uuid.Uuid),
     steps: String,
     title: String,
+    uuid: Option(uuid.Uuid),
   )
 }
 
@@ -23,16 +25,29 @@ pub fn decode(
 ) -> Result(Recipe, List(dynamic.DecodeError)) {
   let decoded_record =
     fields
-    |> dynamic.tuple5(
+    |> dynamic.tuple6(
       dynamic.string,
       dynamic.string,
       dynamic.optional(dynamic.string),
       dynamic.string,
       dynamic.string,
+      dynamic.optional(dynamic.string),
     )()
   case decoded_record {
-    Ok(#(image, ingredients, meal_id, steps, title)) -> {
+    Ok(#(image, ingredients, meal_id, steps, title, recipe_id)) -> {
       let meal_uuid = case meal_id {
+        None -> None
+        Some(id) ->
+          case uuid.from_string(id) {
+            Ok(valid_uuid) -> Some(valid_uuid)
+            Error(_) -> {
+              io.print_error("ERROR: " <> id <> " is not a valid meal UUID")
+              None
+            }
+          }
+      }
+
+      let recipe_uuid = case recipe_id {
         None -> None
         Some(id) ->
           case uuid.from_string(id) {
@@ -50,6 +65,7 @@ pub fn decode(
         meal_id: meal_uuid,
         steps: steps,
         title: title,
+        uuid: recipe_uuid,
       ))
     }
     Error(decoding_errors) -> Error(decoding_errors)
@@ -65,5 +81,5 @@ pub fn add_recipes_to_meals(
 }
 
 pub fn add_to_meal(meal: meal.Meal, recipe: Recipe) -> Recipe {
-  Recipe(..recipe, meal_id: Some(meal.uuid))
+  Recipe(..recipe, meal_id: Some(meal.uuid), uuid: Some(uuid.v4()))
 }

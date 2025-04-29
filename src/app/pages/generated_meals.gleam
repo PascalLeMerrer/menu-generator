@@ -64,6 +64,7 @@ pub fn view_meal(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
             False,
           ),
           hx.target(hx.CssSelector("next .ingredients")),
+          // hx.swap(hx.OuterHTML, option.None),
         ],
         [text("Ingrédients")],
       ),

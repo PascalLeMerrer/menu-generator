@@ -12,6 +12,7 @@ pub fn layout(elements: List(Element(t))) -> Element(t) {
       ]),
       html.link([attribute.rel("stylesheet"), attribute.href("/static/app.css")]),
       html.script([attribute.src("https://unpkg.com/htmx.org@2.0.4")], ""),
+      html.script([attribute.src("https://unpkg.com/htmx-remove@latest")], ""),
     ]),
     html.body([], elements),
   ])

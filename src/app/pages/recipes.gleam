@@ -1,9 +1,10 @@
 import app/models/recipe
 import gleam/dynamic
 import gleam/list
+import hx
 import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
-import lustre/element/html.{img, li, ul}
+import lustre/element/html.{div, img, li, span, ul}
 
 pub fn index(
   recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),
@@ -37,9 +38,14 @@ fn view_recipe(
 }
 
 pub fn view_ingredients(recipe: recipe.Recipe) -> Element(t) {
-  ul(
-    [],
-    recipe.ingredients
-      |> list.map(fn(ingredient) { li([], [text(ingredient)]) }),
-  )
+  div([hx.ext(["remove"]), class("horizontal-container")], [
+    ul(
+      [class("ingredient-list")],
+      recipe.ingredients
+        |> list.map(fn(ingredient) { li([], [text(ingredient)]) }),
+    ),
+    span([attribute.data("remove", "true"), class("close-button")], [
+      text("masquer"),
+    ]),
+  ])
 }

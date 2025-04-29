@@ -99,9 +99,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
       case parsed_recipe_id {
         Ok(valid_meal_id) -> {
-          let recipe =
-            recipe_adapter.find_by_id(ctx.connection, valid_meal_id)
-            |> io.debug
+          let recipe = recipe_adapter.find_by_id(ctx.connection, valid_meal_id)
 
           case recipe {
             [Ok(valid_recipe)] ->

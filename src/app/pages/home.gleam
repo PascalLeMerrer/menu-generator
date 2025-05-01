@@ -7,8 +7,11 @@ pub fn index() -> Element(t) {
   div([class("app")], [
     h1([class("app-title")], [text("Générateur de menus")]),
     nav([], [
-      div([hx.get("new-meals"), hx.target(hx.CssSelector("#main"))], [
+      div([hx.get("date-selection"), hx.target(hx.CssSelector("#main"))], [
         text("Génerer des menus"),
+      ]),
+      div([hx.get("meals"), hx.target(hx.CssSelector("#main"))], [
+        text("Mes menus"),
       ]),
       div([hx.get("recipes"), hx.target(hx.CssSelector("#main"))], [
         text("Mes recettes"),

@@ -3,7 +3,6 @@ import app/models/recipe
 import app/pages/error
 import app/pages/generated_meals
 import app/pages/home
-import app/pages/new_meals
 import app/pages/recipes
 import app/pages/upload
 import app/pages/upload_result
@@ -20,10 +19,6 @@ pub fn generated_meals(meals: List(#(meal.Meal, recipe.Recipe))) {
 
 pub fn home() {
   home.index()
-}
-
-pub fn new_meals() -> Element(a) {
-  new_meals.index()
 }
 
 pub fn recipes(recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError)))) {

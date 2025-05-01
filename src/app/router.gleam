@@ -1,5 +1,6 @@
 import app/adapters/recipes as recipe_adapter
 import app/pages
+import app/pages/date_selection
 import app/pages/generated_meals
 import app/pages/layout.{layout}
 import app/pages/recipes
@@ -7,6 +8,7 @@ import app/routes/recipe_routes
 import app/services/meals
 import app/web.{type Context}
 import gleam/http
+import gleam/int
 import gleam/io
 import gleam/json.{
   UnableToDecode, UnexpectedByte, UnexpectedEndOfInput, UnexpectedFormat,
@@ -15,181 +17,202 @@ import gleam/json.{
 import gleam/list
 import gleam/result
 import simplifile
+import tempo/datetime
 import youid/uuid
 
 import lustre/element
 import wisp.{type Request, type Response}
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
-  use _req <- web.middleware(req, ctx)
-
-  case wisp.path_segments(req) {
-    [] -> {
-      [pages.home()]
-      |> layout
-      |> element.to_document_string_builder
-      |> wisp.html_response(200)
-    }
-    ["import"] -> {
-      [pages.upload()]
-      |> layout
-      |> element.to_document_string_builder
-      |> wisp.html_response(200)
-    }
-    ["meals"] -> {
-      use <- wisp.require_method(req, http.Post)
-      let meals = meals.generate_random_meals(ctx)
-      case meals {
-        Ok(generated_meals) ->
-          [pages.generated_meals(generated_meals)]
-          |> layout
-          |> element.to_document_string_builder
-          |> wisp.html_response(200)
-        Error(error_message) ->
-          pages.error(error_message)
-          // TODO factorize the next lines into a render function? Wait for HTMX to be in place
-          |> element.to_document_string_builder
-          |> wisp.html_response(200)
+  web.middleware(req, ctx, fn(_req) {
+    case wisp.path_segments(req) {
+      [] -> {
+        [pages.home()]
+        |> layout
+        |> render
       }
-    }
-    ["replace-recipe"] -> {
-      use req <- web.middleware(req, ctx)
-      use formdata <- wisp.require_form(req)
-      let parsed_parameters = {
-        use meal_id <- result.try(list.key_find(formdata.values, "meal_id"))
-        use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
-        use recipe_id <- result.try(list.key_find(formdata.values, "recipe_id"))
-        use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
-        Ok(#(parsed_meal_id, parsed_recipe_id))
+      ["import"] -> {
+        [pages.upload()]
+        |> layout
+        |> render
       }
+      ["meals-generate"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
 
-      case parsed_parameters {
-        Ok(#(valid_meal_id, parsed_recipe_id)) -> {
-          let meals = meals.replace_recipe(ctx, valid_meal_id, parsed_recipe_id)
+        let meal_dates =
+          formdata.values
+          |> list.key_filter("meal_date")
+          |> list.try_map(fn(meal_date) { int.parse(meal_date) })
+          |> result.map(fn(dates) {
+            list.map(dates, fn(meal_date) {
+              datetime.from_unix_milli(meal_date)
+            })
+          })
 
-          case meals {
-            Ok([generated_meals]) ->
-              [generated_meals.view_meal(generated_meals)]
-              |> layout
-              |> element.to_document_string_builder
-              |> wisp.html_response(200)
-            Error(message) -> error_message(message)
-            Ok([]) -> error_message("aucun menu généré")
-            Ok([_, _, ..]) -> error_message("multiples menus générés")
-          }
+        let meals = case meal_dates {
+          Ok(valid_dates) -> meals.generate_random_meals(ctx, valid_dates)
+          Error(_) -> Error("dates invalides")
         }
-        Error(_) ->
-          error_message("l'identifiant du repas ou de la recette est invalide")
-      }
-    }
-    ["new-meals"] -> {
-      pages.new_meals()
-      |> element.to_document_string_builder
-      |> wisp.html_response(200)
-    }
-    ["recipe-ingredients"] -> {
-      use req <- web.middleware(req, ctx)
-      use formdata <- wisp.require_form(req)
-
-      let parsed_recipe_id = {
-        use recipe_id <- result.try(list.key_find(formdata.values, "recipe_id"))
-        use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
-        Ok(parsed_recipe_id)
-      }
-
-      case parsed_recipe_id {
-        Ok(valid_meal_id) -> {
-          let recipe = recipe_adapter.find_by_id(ctx.connection, valid_meal_id)
-
-          case recipe {
-            [Ok(valid_recipe)] ->
-              [recipes.view_ingredients(valid_recipe)]
-              |> layout
-              |> element.to_document_string_builder
-              |> wisp.html_response(200)
-            [Error(_)] -> error_message("ingrédients non trouvés 1")
-            [] -> error_message("ingrédients non trouvés 2")
-            [_, _, ..] -> error_message("ingrédients non trouvés 3")
-          }
+        case meals {
+          Ok(generated_meals) ->
+            [pages.generated_meals(generated_meals)]
+            |> layout
+            |> render
+          Error(error_message) ->
+            pages.error(error_message)
+            |> render
         }
-        Error(_) -> error_message("l'identifiant du repas est invalide")
       }
-    }
-    ["recipes"] -> {
-      let all_recipes = recipe_adapter.get_all(ctx.connection)
-      pages.recipes(all_recipes)
-      |> element.to_document_string_builder
-      |> wisp.html_response(200)
-    }
+      ["replace-recipe"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
+        let parsed_parameters = {
+          use meal_id <- result.try(list.key_find(formdata.values, "meal_id"))
+          use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
+          use recipe_id <- result.try(list.key_find(
+            formdata.values,
+            "recipe_id",
+          ))
+          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(#(parsed_meal_id, parsed_recipe_id))
+        }
 
-    ["recipes", "upload"] -> {
-      use <- wisp.require_method(req, http.Post)
-      use formdata <- wisp.require_form(req)
-      let result: Result(String, Nil) = {
-        // Note the name of the input is used to find the value.
-        use file <- result.try(list.key_find(formdata.files, "uploaded-file"))
+        case parsed_parameters {
+          Ok(#(valid_meal_id, parsed_recipe_id)) -> {
+            let meals =
+              meals.replace_recipe(ctx, valid_meal_id, parsed_recipe_id)
 
-        // The file has been streamed to a temporary file on the disc, so there's no
-        // risk of large files causing memory issues.
-        // The `.path` field contains the path to this file, which you may choose to
-        // move or read using a library like `simplifile`. When the request is done the
-        // temporary file is deleted.
-        wisp.log_info("File uploaded to " <> file.path)
-        Ok(file.path)
-      }
-
-      case result {
-        Ok(path) -> {
-          let assert Ok(file_content) = simplifile.read(from: path)
-          case recipe_routes.from_xml(file_content) {
-            Ok(parsed_recipes) -> {
-              let _ =
-                parsed_recipes |> recipe_adapter.bulk_insert(ctx.connection)
-              [pages.upload_result(parsed_recipes)]
-              |> layout
-              |> element.to_document_string_builder
-              |> wisp.html_response(200)
-            }
-            Error(UnexpectedEndOfInput) -> {
-              io.println("UnexpectedEndOfInput")
-              wisp.bad_request()
-            }
-            Error(UnexpectedByte(str)) -> {
-              io.println("UnexpectedByte " <> str)
-              wisp.bad_request()
-            }
-            Error(UnexpectedSequence(str)) -> {
-              io.println("UnexpectedSequence " <> str)
-              wisp.bad_request()
-            }
-            Error(UnexpectedFormat(errors)) -> {
-              io.debug(errors)
-              wisp.bad_request()
-            }
-            Error(UnableToDecode(errors)) -> {
-              io.debug(errors)
-              wisp.bad_request()
+            case meals {
+              Ok([generated_meals]) ->
+                [generated_meals.view_meal(generated_meals)]
+                |> layout
+                |> render
+              Error(message) -> error_message(message)
+              Ok([]) -> error_message("aucun menu généré")
+              Ok([_, _, ..]) -> error_message("multiples menus générés")
             }
           }
-        }
-        Error(_) -> {
-          wisp.bad_request()
+          Error(_) ->
+            error_message(
+              "l'identifiant du repas ou de la recette est invalide",
+            )
         }
       }
-    }
+      ["date-selection"] -> {
+        date_selection.index()
+        |> render
+      }
+      ["recipe-ingredients"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
 
-    // All the empty responses
-    ["internal-server-error"] -> wisp.internal_server_error()
-    ["unprocessable-entity"] -> wisp.unprocessable_entity()
-    ["method-not-allowed"] -> wisp.method_not_allowed([])
-    ["entity-too-large"] -> wisp.entity_too_large()
-    ["bad-request"] -> wisp.bad_request()
-    _ -> wisp.not_found()
-  }
+        let parsed_recipe_id = {
+          use recipe_id <- result.try(list.key_find(
+            formdata.values,
+            "recipe_id",
+          ))
+          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(parsed_recipe_id)
+        }
+
+        case parsed_recipe_id {
+          Ok(valid_meal_id) -> {
+            let recipe =
+              recipe_adapter.find_by_id(ctx.connection, valid_meal_id)
+
+            case recipe {
+              [Ok(valid_recipe)] ->
+                [recipes.view_ingredients(valid_recipe)]
+                |> layout
+                |> render
+              [Error(_)] -> error_message("ingrédients non trouvés 1")
+              [] -> error_message("ingrédients non trouvés 2")
+              [_, _, ..] -> error_message("ingrédients non trouvés 3")
+            }
+          }
+          Error(_) -> error_message("l'identifiant du repas est invalide")
+        }
+      }
+      ["recipes"] -> {
+        let all_recipes = recipe_adapter.get_all(ctx.connection)
+        pages.recipes(all_recipes)
+        |> render
+      }
+
+      ["recipes", "upload"] -> {
+        use <- wisp.require_method(req, http.Post)
+        use formdata <- wisp.require_form(req)
+        let result: Result(String, Nil) = {
+          // Note the name of the input is used to find the value.
+          use file <- result.try(list.key_find(formdata.files, "uploaded-file"))
+
+          // The file has been streamed to a temporary file on the disc, so there's no
+          // risk of large files causing memory issues.
+          // The `.path` field contains the path to this file, which you may choose to
+          // move or read using a library like `simplifile`. When the request is done the
+          // temporary file is deleted.
+          wisp.log_info("File uploaded to " <> file.path)
+          Ok(file.path)
+        }
+
+        case result {
+          Ok(path) -> {
+            let assert Ok(file_content) = simplifile.read(from: path)
+            case recipe_routes.from_xml(file_content) {
+              Ok(parsed_recipes) -> {
+                let _ =
+                  parsed_recipes |> recipe_adapter.bulk_insert(ctx.connection)
+                [pages.upload_result(parsed_recipes)]
+                |> layout
+                |> render
+              }
+              Error(UnexpectedEndOfInput) -> {
+                io.println("UnexpectedEndOfInput")
+                wisp.bad_request()
+              }
+              Error(UnexpectedByte(str)) -> {
+                io.println("UnexpectedByte " <> str)
+                wisp.bad_request()
+              }
+              Error(UnexpectedSequence(str)) -> {
+                io.println("UnexpectedSequence " <> str)
+                wisp.bad_request()
+              }
+              Error(UnexpectedFormat(errors)) -> {
+                io.debug(errors)
+                wisp.bad_request()
+              }
+              Error(UnableToDecode(errors)) -> {
+                io.debug(errors)
+                wisp.bad_request()
+              }
+            }
+          }
+          Error(_) -> {
+            wisp.bad_request()
+          }
+        }
+      }
+
+      // All the empty responses
+      ["internal-server-error"] -> wisp.internal_server_error()
+      ["unprocessable-entity"] -> wisp.unprocessable_entity()
+      ["method-not-allowed"] -> wisp.method_not_allowed([])
+      ["entity-too-large"] -> wisp.entity_too_large()
+      ["bad-request"] -> wisp.bad_request()
+      _ -> wisp.not_found()
+    }
+  })
 }
 
 fn error_message(message: String) -> Response {
   pages.error("Erreur : " <> message)
+  |> render
+}
+
+fn render(html_nodes: element.Element(a)) -> Response {
+  html_nodes
   |> element.to_document_string_builder
   |> wisp.html_response(200)
 }

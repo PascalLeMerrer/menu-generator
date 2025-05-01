@@ -11,8 +11,8 @@ pub fn layout(elements: List(Element(t))) -> Element(t) {
         attribute.attribute("content", "width=device-width, initial-scale=1"),
       ]),
       html.link([attribute.rel("stylesheet"), attribute.href("/static/app.css")]),
-      html.script([attribute.src("https://unpkg.com/htmx.org@2.0.4")], ""),
-      html.script([attribute.src("https://unpkg.com/htmx-remove@latest")], ""),
+      html.script([attribute.src("/static/htmx.min.js")], ""),
+      html.script([attribute.src("/static/htmx-remove.js")], ""),
     ]),
     html.body([], elements),
   ])

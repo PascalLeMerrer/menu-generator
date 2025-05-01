@@ -30,6 +30,7 @@ gtempo = ">= 6.1.2 and < 7.0.0"
 youid = ">= 1.2.0 and < 2.0.0"
 hx = ">= 1.0.1 and < 2.0.0"
 lustre = ">= 4.6.4 and < 5.0.0"
+kv_sessions = ">= 0.1.1 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

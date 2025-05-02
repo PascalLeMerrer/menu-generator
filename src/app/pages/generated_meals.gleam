@@ -31,8 +31,9 @@ pub fn view_meal(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
   let recipe_id =
     recipe.uuid |> echo |> option.map(uuid.to_string) |> option.unwrap("")
 
+  let date_label = generated_meal.date |> date.meal_moments
   div([class("generated_menu")], [
-    span([class("date")], [text(date)]),
+    span([class("date")], [text(date_label)]),
     img([class("image"), src(image_url), height(100), width(100)]),
     span([class("title")], [text(recipe.title)]),
     div([class("actions")], [

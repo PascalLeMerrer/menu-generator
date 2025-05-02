@@ -7,7 +7,6 @@ import app/pages/recipes
 import app/pages/upload
 import app/pages/upload_result
 import gleam/dynamic
-import lustre/element.{type Element}
 
 pub fn error(error_message) {
   error.index(error_message)

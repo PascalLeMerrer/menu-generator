@@ -1,4 +1,5 @@
 import app/adapters/recipes as recipe_adapter
+import app/models/date as date_model
 import app/pages
 import app/pages/date_selection
 import app/pages/generated_meals
@@ -18,6 +19,7 @@ import gleam/list
 import gleam/result
 import simplifile
 import tempo/datetime
+import tempo/instant
 import youid/uuid
 
 import lustre/element
@@ -100,7 +102,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         }
       }
       ["date-selection"] -> {
-        date_selection.index()
+        let today = instant.now() |> instant.as_local_date()
+        date_selection.index(date_model.for_potential_meals(today))
         |> render
       }
       ["recipe-ingredients"] -> {

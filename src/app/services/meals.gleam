@@ -1,11 +1,10 @@
-import app/adapters/recipes
 import gleam/list
 import gleam/result
 import tempo
 import youid/uuid
 
 import app/adapters/meal as meal_adapter
-import app/adapters/recipes as recipe_adapter
+import app/adapters/recipe as recipe_adapter
 import app/models/meal
 import app/models/recipe
 import app/web.{type Context}
@@ -30,14 +29,14 @@ fn add_random_recipes_to_meals(
 ) -> Result(List(#(meal.Meal, recipe.Recipe)), String) {
   let count = list.length(meals)
   let #(random_recipes, decoding_errors) =
-    recipes.get_random(ctx.connection, count)
+    recipe_adapter.get_random(ctx.connection, count)
     |> result.partition
   case random_recipes, decoding_errors {
     valid_recipes, [] -> {
       let maybe_cloned_recipes =
         valid_recipes
         |> recipe.add_recipes_to_meals(meals)
-        |> recipes.bulk_insert(ctx.connection)
+        |> recipe_adapter.bulk_insert(ctx.connection)
         |> result.partition
       case maybe_cloned_recipes {
         #(cloned_recipes, []) -> Ok(list.zip(meals, cloned_recipes))

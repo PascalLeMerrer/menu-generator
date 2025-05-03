@@ -8,7 +8,6 @@ import cake/where
 import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/int
-import gleam/io
 import gleam/list
 import tempo/datetime
 import youid/uuid
@@ -44,7 +43,6 @@ pub fn insert(
   ])
   |> insert.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
-  |> io.debug
   |> db.display_db_error
 }
 

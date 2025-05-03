@@ -1,6 +1,6 @@
 import app/adapters/db
 import app/adapters/meal
-import app/adapters/recipes
+import app/adapters/recipe as recipe_adapter
 import app/router
 import app/web.{Context}
 import gleam/io
@@ -32,7 +32,7 @@ pub fn main() {
 
   sqlite.with_connection(sqlite_database_filename, fn(db_connection) {
     let table_creation_results = [
-      db_connection |> db.create_table_if_not_exists(recipes.schema),
+      db_connection |> db.create_table_if_not_exists(recipe_adapter.schema),
       db_connection |> db.create_table_if_not_exists(meal.schema),
     ]
     case table_creation_results |> result.all() {

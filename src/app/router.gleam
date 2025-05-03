@@ -1,4 +1,4 @@
-import app/adapters/recipes as recipe_adapter
+import app/adapters/recipe as recipe_adapter
 import app/models/date as date_model
 import app/pages
 import app/pages/date_selection

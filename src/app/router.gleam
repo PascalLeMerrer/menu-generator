@@ -8,15 +8,17 @@ import app/pages/recipes
 import app/routes/recipe_routes
 import app/services/meals
 import app/web.{type Context}
+import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/http
 import gleam/int
-import gleam/io
 import gleam/json.{
   UnableToDecode, UnexpectedByte, UnexpectedEndOfInput, UnexpectedFormat,
   UnexpectedSequence,
 }
 import gleam/list
 import gleam/result
+import gleam/string
 import simplifile
 import tempo/datetime
 import tempo/instant
@@ -171,23 +173,23 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
                 |> render
               }
               Error(UnexpectedEndOfInput) -> {
-                io.println("UnexpectedEndOfInput")
+                wisp.log_error("UnexpectedEndOfInput")
                 wisp.bad_request()
               }
               Error(UnexpectedByte(str)) -> {
-                io.println("UnexpectedByte " <> str)
+                wisp.log_error("UnexpectedByte " <> str)
                 wisp.bad_request()
               }
               Error(UnexpectedSequence(str)) -> {
-                io.println("UnexpectedSequence " <> str)
+                wisp.log_error("UnexpectedSequence " <> str)
                 wisp.bad_request()
               }
               Error(UnexpectedFormat(errors)) -> {
-                io.debug(errors)
+                wisp.log_error(errors |> dynamic_decoding_errors_to_string)
                 wisp.bad_request()
               }
               Error(UnableToDecode(errors)) -> {
-                io.debug(errors)
+                wisp.log_error(errors |> decoding_errors_to_string)
                 wisp.bad_request()
               }
             }
@@ -218,4 +220,30 @@ fn render(html_nodes: element.Element(a)) -> Response {
   html_nodes
   |> element.to_document_string_builder
   |> wisp.html_response(200)
+}
+
+fn dynamic_decoding_errors_to_string(errors: List(dynamic.DecodeError)) {
+  errors
+  |> list.map(fn(error) {
+    "Expected:"
+    <> error.expected
+    <> " - Found: "
+    <> error.found
+    <> " - Path: "
+    <> error.path |> string.concat
+  })
+  |> string.join("\n")
+}
+
+fn decoding_errors_to_string(errors: List(decode.DecodeError)) {
+  errors
+  |> list.map(fn(error) {
+    "Expected:"
+    <> error.expected
+    <> " - Found: "
+    <> error.found
+    <> " - Path: "
+    <> error.path |> string.concat
+  })
+  |> string.join("\n")
 }

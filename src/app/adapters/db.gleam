@@ -1,7 +1,7 @@
 import cake/adapter/sqlite
 import gleam/int
-import gleam/io
 import sqlight
+import wisp
 
 pub fn create_table_if_not_exists(
   db_connection: sqlight.Connection,
@@ -23,7 +23,7 @@ pub fn display_db_error(
         |> sqlight.error_code_to_int
         |> int.to_string
 
-      io.print_error(
+      wisp.log_error(
         "Database error: " <> error.message <> " (" <> error_code <> ")",
       )
       result

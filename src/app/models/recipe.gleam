@@ -1,9 +1,9 @@
 import app/models/meal
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
+import wisp
 import youid/uuid
 
 // uuid is not None if and only if the recipe instance is attached to a meal
@@ -41,7 +41,7 @@ pub fn decode(
           case uuid.from_string(id) {
             Ok(valid_uuid) -> Some(valid_uuid)
             Error(_) -> {
-              io.print_error("ERROR: " <> id <> " is not a valid meal UUID")
+              wisp.log_error("ERROR: " <> id <> " is not a valid meal UUID")
               None
             }
           }
@@ -53,7 +53,7 @@ pub fn decode(
           case uuid.from_string(id) {
             Ok(valid_uuid) -> Some(valid_uuid)
             Error(_) -> {
-              io.print_error("ERROR: " <> id <> " is not a valid recipe UUID")
+              wisp.log_error("ERROR: " <> id <> " is not a valid recipe UUID")
               None
             }
           }

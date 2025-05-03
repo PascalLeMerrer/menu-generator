@@ -3,7 +3,6 @@ import app/adapters/meal
 import app/adapters/recipe as recipe_adapter
 import app/router
 import app/web.{Context}
-import gleam/io
 import gleam/result
 import sqlight
 
@@ -38,7 +37,7 @@ pub fn main() {
     case table_creation_results |> result.all() {
       Ok(_) -> db_connection |> start_server
       error -> {
-        io.println_error("Exiting on a fatal error")
+        wisp.log_error("Exiting on a fatal error")
         error
       }
     }

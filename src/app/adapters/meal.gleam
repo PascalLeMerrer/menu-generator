@@ -15,8 +15,12 @@ import youid/uuid
 
 import sqlight
 
+const table_name = "meals"
+
 pub const schema = "
-  CREATE TABLE IF NOT EXISTS meals (
+  CREATE TABLE IF NOT EXISTS "
+  <> table_name
+  <> "(
     date INTEGER NOT NULL,
     menu_id TEXT NOT NULL,
     uuid TEXT PRIMARY KEY
@@ -35,7 +39,7 @@ pub fn insert(
     ]
     |> insert.row
   })
-  |> insert.from_values(table_name: "meals", columns: [
+  |> insert.from_values(table_name: table_name, columns: [
     "date", "menu_id", "uuid",
   ])
   |> insert.to_query
@@ -48,7 +52,7 @@ pub fn get_all(
   db_connection: sqlight.Connection,
 ) -> List(Result(meal.Meal, List(dynamic.DecodeError))) {
   select.new()
-  |> select.from_table("meals")
+  |> select.from_table(table_name)
   |> select.selects([
     select.col("date"),
     select.col("menu_id"),
@@ -66,7 +70,7 @@ pub fn get(
 ) -> List(Result(meal.Meal, List(dynamic.DecodeError))) {
   let uuid = meal_id |> uuid.to_string
   select.new()
-  |> select.from_table("meals")
+  |> select.from_table(table_name)
   |> select.selects([
     select.col("date"),
     select.col("menu_id"),
@@ -85,7 +89,7 @@ pub fn delete_(
 ) -> Result(List(dynamic.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
   delete.new()
-  |> delete.table("meals")
+  |> delete.table(table_name)
   |> delete.where(where.col("uuid") |> where.eq(where.string(uuid)))
   |> delete.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)

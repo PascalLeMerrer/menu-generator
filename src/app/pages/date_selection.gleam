@@ -1,13 +1,13 @@
 import app/helpers/date as date_helper
 import gleam/int
 import gleam/list
+import gleam/option
 import hx
 import lustre/attribute
 import lustre/element.{type Element}
-import lustre/element/html.{div, fieldset, form, input, label, text}
+import lustre/element/html.{div, fieldset, form, h2, input, label, text}
 import tempo
 import tempo/datetime
-import tempo/time
 
 const default_meals = [
   "Vendredi soir", "Samedi midi", "Samedi soir", "Dimanche midi",
@@ -16,14 +16,24 @@ const default_meals = [
 ]
 
 pub fn index(dates: List(tempo.DateTime)) -> Element(t) {
-  form([hx.post("/meals-generate"), hx.target(hx.CssSelector("#menus"))], [
-    fieldset(
-      [],
-      dates
-        |> list.map(checkbox),
+  div([], [
+    h2([], [text("Sélectionner les repas à prévoir")]),
+    form(
+      [
+        hx.post("/meals-generate"),
+        hx.target(hx.CssSelector("closest div")),
+        hx.swap(hx.OuterHTML, option.None),
+      ],
+      [
+        fieldset(
+          [],
+          dates
+            |> list.map(checkbox),
+        ),
+        input([attribute.type_("submit"), attribute.value("Générer")]),
+        // div([attribute.id("menus")], []),
+      ],
     ),
-    input([attribute.type_("submit"), attribute.value("Générer")]),
-    div([attribute.id("menus")], []),
   ])
 }
 

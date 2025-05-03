@@ -16,8 +16,12 @@ import youid/uuid
 import cake/where
 import sqlight
 
+const table_name = "recipes"
+
 pub const schema = "-- recipes that could be selected for new menus
-  CREATE TABLE IF NOT EXISTS recipes (
+  CREATE TABLE IF NOT EXISTS "
+  <> table_name
+  <> " (
     image TEXT NOT NULL,
     ingredients TEXT NOT NULL,
     meal_id TEXT,
@@ -51,7 +55,7 @@ pub fn bulk_insert(
     ]
     |> insert.row
   })
-  |> insert.from_values(table_name: "recipes", columns: [
+  |> insert.from_values(table_name: table_name, columns: [
     "image", "ingredients", "meal_id", "steps", "title", "uuid",
   ])
   |> insert.returning([
@@ -71,8 +75,7 @@ pub fn get_all(
   db_connection: sqlight.Connection,
 ) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
   select.new()
-  // TODO use const for table name
-  |> select.from_table("recipes")
+  |> select.from_table(table_name)
   |> select.selects([
     select.col("image"),
     select.col("ingredients"),
@@ -93,7 +96,7 @@ pub fn find_by_meal_id(
 ) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
   let uuid = meal_id |> uuid.to_string
   select.new()
-  |> select.from_table("recipes")
+  |> select.from_table(table_name)
   |> select.selects([
     select.col("image"),
     select.col("ingredients"),
@@ -115,7 +118,7 @@ pub fn find_by_id(
 ) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
   let uuid = recipe_id |> uuid.to_string
   select.new()
-  |> select.from_table("recipes")
+  |> select.from_table(table_name)
   |> select.selects([
     select.col("image"),
     select.col("ingredients"),
@@ -137,7 +140,7 @@ pub fn get_random(
   // 0 will return all recipes
 ) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
   select.new()
-  |> select.from_table("recipes")
+  |> select.from_table(table_name)
   |> select.selects([
     select.col("image"),
     select.col("ingredients"),
@@ -160,7 +163,7 @@ pub fn delete_(
 ) -> Result(List(dynamic.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
   delete.new()
-  |> delete.table("recipes")
+  |> delete.table(table_name)
   |> delete.where(where.col("uuid") |> where.eq(where.string(uuid)))
   |> delete.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)

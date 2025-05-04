@@ -1,13 +1,15 @@
+import app/helpers/decoding
 import app/models/recipe
-import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/list
 import hx
 import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, img, li, span, ul}
+import wisp
 
 pub fn index(
-  recipes: List(Result(recipe.Recipe, List(dynamic.DecodeError))),
+  recipes: List(Result(recipe.Recipe, List(decode.DecodeError))),
 ) -> Element(t) {
   ul(
     [class("unstyled")],
@@ -17,10 +19,13 @@ pub fn index(
 }
 
 fn view_recipe(
-  maybe_recipe: Result(recipe.Recipe, List(dynamic.DecodeError)),
+  maybe_recipe: Result(recipe.Recipe, List(decode.DecodeError)),
 ) -> Element(t) {
   li([], case maybe_recipe {
-    Error(_) -> {
+    Error(errors) -> {
+      let _ = {
+        wisp.log_error(errors |> decoding.decoding_errors_to_string)
+      }
       [text("Erreur de décodage de la recette ")]
     }
     Ok(valid_recipe) -> [

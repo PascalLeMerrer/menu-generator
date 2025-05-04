@@ -1,4 +1,5 @@
 import app/adapters/recipe as recipe_adapter
+import app/helpers/decoding
 import app/models/date as date_model
 import app/pages
 import app/pages/date_selection
@@ -8,8 +9,6 @@ import app/pages/recipes
 import app/routes/recipe_routes
 import app/services/meals
 import app/web.{type Context}
-import gleam/dynamic
-import gleam/dynamic/decode
 import gleam/http
 import gleam/int
 import gleam/json.{
@@ -18,7 +17,6 @@ import gleam/json.{
 }
 import gleam/list
 import gleam/result
-import gleam/string
 import simplifile
 import tempo/datetime
 import tempo/instant
@@ -141,7 +139,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       }
       ["recipes"] -> {
         let all_recipes = recipe_adapter.get_all(ctx.connection)
-        pages.recipes(all_recipes)
+        recipes.index(all_recipes)
         |> render
       }
 
@@ -185,11 +183,13 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
                 wisp.bad_request()
               }
               Error(UnexpectedFormat(errors)) -> {
-                wisp.log_error(errors |> dynamic_decoding_errors_to_string)
+                wisp.log_error(
+                  errors |> decoding.dynamic_decoding_errors_to_string,
+                )
                 wisp.bad_request()
               }
               Error(UnableToDecode(errors)) -> {
-                wisp.log_error(errors |> decoding_errors_to_string)
+                wisp.log_error(errors |> decoding.decoding_errors_to_string)
                 wisp.bad_request()
               }
             }
@@ -220,30 +220,4 @@ fn render(html_nodes: element.Element(a)) -> Response {
   html_nodes
   |> element.to_document_string_builder
   |> wisp.html_response(200)
-}
-
-fn dynamic_decoding_errors_to_string(errors: List(dynamic.DecodeError)) {
-  errors
-  |> list.map(fn(error) {
-    "Expected:"
-    <> error.expected
-    <> " - Found: "
-    <> error.found
-    <> " - Path: "
-    <> error.path |> string.concat
-  })
-  |> string.join("\n")
-}
-
-fn decoding_errors_to_string(errors: List(decode.DecodeError)) {
-  errors
-  |> list.map(fn(error) {
-    "Expected:"
-    <> error.expected
-    <> " - Found: "
-    <> error.found
-    <> " - Path: "
-    <> error.path |> string.concat
-  })
-  |> string.join("\n")
 }

@@ -1,11 +1,9 @@
-// TODO rename to recipe
 import app/adapters/db
 import app/models/recipe
 import cake/adapter/sqlite
 import cake/delete
 import cake/insert
 import cake/select
-import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/int
 import gleam/list
@@ -34,7 +32,7 @@ pub const schema = "-- recipes that could be selected for new menus
 pub fn bulk_insert(
   recipes: List(recipe.Recipe),
   db_connection: sqlight.Connection,
-) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   recipes
   |> list.map(fn(recipe) {
     [
@@ -73,7 +71,7 @@ fn join_lines(lines: List(String)) -> String {
 
 pub fn get_all(
   db_connection: sqlight.Connection,
-) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
   |> select.selects([
@@ -93,7 +91,7 @@ pub fn get_all(
 pub fn find_by_meal_id(
   db_connection: sqlight.Connection,
   meal_id: uuid.Uuid,
-) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   let uuid = meal_id |> uuid.to_string
   select.new()
   |> select.from_table(table_name)
@@ -115,7 +113,7 @@ pub fn find_by_meal_id(
 pub fn find_by_id(
   db_connection: sqlight.Connection,
   recipe_id: uuid.Uuid,
-) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   let uuid = recipe_id |> uuid.to_string
   select.new()
   |> select.from_table(table_name)
@@ -138,7 +136,7 @@ pub fn get_random(
   db_connection: sqlight.Connection,
   count: Int,
   // 0 will return all recipes
-) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
   |> select.selects([
@@ -160,7 +158,7 @@ pub fn get_random(
 pub fn delete_(
   uuid: uuid.Uuid,
   db_connection: sqlight.Connection,
-) -> Result(List(dynamic.Dynamic), sqlight.Error) {
+) -> Result(List(decode.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
   delete.new()
   |> delete.table(table_name)
@@ -171,8 +169,8 @@ pub fn delete_(
 }
 
 fn decode_recipes(
-  rows: Result(List(dynamic.Dynamic), sqlight.Error),
-) -> List(Result(recipe.Recipe, List(dynamic.DecodeError))) {
+  rows: Result(List(decode.Dynamic), sqlight.Error),
+) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   case rows {
     Ok(records) -> {
       records
@@ -186,7 +184,7 @@ fn decode_recipes(
         |> int.to_string
       [
         Error([
-          dynamic.DecodeError(
+          decode.DecodeError(
             expected: "",
             found: "Database error: " <> message <> " (" <> error_code <> ")",
             path: [""],

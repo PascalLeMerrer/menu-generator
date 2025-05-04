@@ -5,7 +5,6 @@ import cake/delete
 import cake/insert
 import cake/select
 import cake/where
-import gleam/dynamic
 import gleam/dynamic/decode
 import gleam/int
 import gleam/list
@@ -28,7 +27,7 @@ pub const schema = "
 pub fn insert(
   db_connection: sqlight.Connection,
   meals: List(meal.Meal),
-) -> Result(List(dynamic.Dynamic), sqlight.Error) {
+) -> Result(List(decode.Dynamic), sqlight.Error) {
   meals
   |> list.map(fn(meal) {
     [
@@ -48,7 +47,7 @@ pub fn insert(
 
 pub fn get_all(
   db_connection: sqlight.Connection,
-) -> List(Result(meal.Meal, List(dynamic.DecodeError))) {
+) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
   |> select.selects([
@@ -65,7 +64,7 @@ pub fn get_all(
 pub fn get(
   meal_id: uuid.Uuid,
   db_connection: sqlight.Connection,
-) -> List(Result(meal.Meal, List(dynamic.DecodeError))) {
+) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   let uuid = meal_id |> uuid.to_string
   select.new()
   |> select.from_table(table_name)
@@ -84,7 +83,7 @@ pub fn get(
 pub fn delete_(
   uuid: uuid.Uuid,
   db_connection: sqlight.Connection,
-) -> Result(List(dynamic.Dynamic), sqlight.Error) {
+) -> Result(List(decode.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
   delete.new()
   |> delete.table(table_name)
@@ -95,8 +94,8 @@ pub fn delete_(
 }
 
 fn decode_meals(
-  rows: Result(List(dynamic.Dynamic), sqlight.Error),
-) -> List(Result(meal.Meal, List(dynamic.DecodeError))) {
+  rows: Result(List(decode.Dynamic), sqlight.Error),
+) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   case rows {
     Ok(records) -> {
       records
@@ -110,7 +109,7 @@ fn decode_meals(
         |> int.to_string
       [
         Error([
-          dynamic.DecodeError(
+          decode.DecodeError(
             expected: "",
             found: "Database error: " <> message <> " (" <> error_code <> ")",
             path: [""],

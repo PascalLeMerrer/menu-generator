@@ -1,5 +1,7 @@
 import app/models/meal
 import gleam/dynamic
+import gleam/dynamic/decode as dd
+
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
@@ -20,19 +22,17 @@ pub type Recipe {
 
 pub const separator = "@"
 
-pub fn decode(
-  fields: dynamic.Dynamic,
-) -> Result(Recipe, List(dynamic.DecodeError)) {
-  let decoded_record =
-    fields
-    |> dynamic.tuple6(
-      dynamic.string,
-      dynamic.string,
-      dynamic.optional(dynamic.string),
-      dynamic.string,
-      dynamic.string,
-      dynamic.optional(dynamic.string),
-    )()
+pub fn decode(fields: dynamic.Dynamic) -> Result(Recipe, List(dd.DecodeError)) {
+  let decoder = {
+    use image <- dd.field(0, dd.string)
+    use ingredients <- dd.field(1, dd.string)
+    use meal_id <- dd.field(2, dd.optional(dd.string))
+    use steps <- dd.field(3, dd.string)
+    use title <- dd.field(4, dd.string)
+    use recipe_id <- dd.field(5, dd.optional(dd.string))
+    dd.success(#(image, ingredients, meal_id, steps, title, recipe_id))
+  }
+  let decoded_record = dd.run(fields, decoder)
   case decoded_record {
     Ok(#(image, ingredients, meal_id, steps, title, recipe_id)) -> {
       let meal_uuid = case meal_id {

@@ -1,4 +1,4 @@
-import gleam/dynamic
+import gleam/dynamic/decode as dd
 import gleam/list
 import tempo
 import tempo/datetime
@@ -8,12 +8,14 @@ pub type Meal {
   Meal(date: tempo.DateTime, menu_id: uuid.Uuid, uuid: uuid.Uuid)
 }
 
-pub fn decode(
-  fields: dynamic.Dynamic,
-) -> Result(Meal, List(dynamic.DecodeError)) {
-  let decoded_record =
-    fields
-    |> dynamic.tuple3(dynamic.int, dynamic.string, dynamic.string)()
+pub fn decode(fields: dd.Dynamic) -> Result(Meal, List(dd.DecodeError)) {
+  let decoder = {
+    use date <- dd.field(0, dd.int)
+    use menu_id <- dd.field(1, dd.string)
+    use meal_uuid <- dd.field(2, dd.string)
+    dd.success(#(date, menu_id, meal_uuid))
+  }
+  let decoded_record = dd.run(fields, decoder)
   case decoded_record {
     Ok(#(date, menu_id, meal_uuid)) -> {
       let maybe_uuid = meal_uuid |> uuid.from_string
@@ -23,19 +25,15 @@ pub fn decode(
           Ok(Meal(date |> datetime.from_unix_seconds, valid_menu_id, valid_uuid))
         Error(_), _ ->
           Error([
-            dynamic.DecodeError(
-              expected: "Valid uuid V4",
-              found: meal_uuid,
-              path: ["meal", "meal_uuid"],
-            ),
+            dd.DecodeError(expected: "Valid uuid V4", found: meal_uuid, path: [
+              "meal", "meal_uuid",
+            ]),
           ])
         Ok(_), Error(_) ->
           Error([
-            dynamic.DecodeError(
-              expected: "Valid uuid V4",
-              found: menu_id,
-              path: ["meal", "menu_id"],
-            ),
+            dd.DecodeError(expected: "Valid uuid V4", found: menu_id, path: [
+              "meal", "menu_id",
+            ]),
           ])
       }
     }

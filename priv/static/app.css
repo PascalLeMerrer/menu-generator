@@ -44,6 +44,14 @@ nav {
   margin-bottom: 30px;
 }
 
+nav > div {
+  cursor: pointer;
+}
+
+nav > div:hover {
+  text-decoration:underline;
+}
+
 .generated_menu{
   display: grid;
   grid-template-columns: 100px 100px 300px 100px;

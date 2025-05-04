@@ -100,3 +100,7 @@ nav > div:hover {
 .ingredient-list{
   flex-grow: 1;
 }
+
+.close-button {
+  cursor:pointer;
+}

@@ -10,8 +10,8 @@ pub fn index() -> Element(t) {
       div([hx.get("date-selection"), hx.target(hx.CssSelector("#main"))], [
         text("Génerer des menus"),
       ]),
-      div([hx.get("meals"), hx.target(hx.CssSelector("#main"))], [
-        text("Mes menus"),
+      div([hx.get("meals-list"), hx.target(hx.CssSelector("#main"))], [
+        text("Mes repas"),
       ]),
       div([hx.get("recipes"), hx.target(hx.CssSelector("#main"))], [
         text("Mes recettes"),

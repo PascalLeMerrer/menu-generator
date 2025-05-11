@@ -22,14 +22,12 @@ pub fn index(meals: List(#(meal.Meal, recipe.Recipe))) -> Element(t) {
 
 pub fn view_meal(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
   let #(generated_meal, recipe) = meal_and_recipe
-  let date = generated_meal.date |> date.localized_date
   let image_url = case recipe.image {
     "" -> "/static/placeholder-100x100.png"
     _ -> recipe.image
   }
   let meal_id = generated_meal.uuid |> uuid.to_string()
-  let recipe_id =
-    recipe.uuid |> echo |> option.map(uuid.to_string) |> option.unwrap("")
+  let recipe_id = recipe.uuid |> option.map(uuid.to_string) |> option.unwrap("")
 
   let date_label = generated_meal.date |> date.meal_moments
   div([class("generated_menu")], [

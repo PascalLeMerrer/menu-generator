@@ -8,6 +8,7 @@ import cake/where
 import gleam/dynamic/decode
 import gleam/int
 import gleam/list
+import tempo
 import tempo/datetime
 import youid/uuid
 
@@ -55,6 +56,45 @@ pub fn get_all(
     select.col("menu_id"),
     select.col("uuid"),
   ])
+  |> select.to_query
+  |> sqlite.run_read_query(decode.dynamic, db_connection)
+  |> db.display_db_error
+  |> decode_meals
+}
+
+pub fn get_limited_to(
+  db_connection: sqlight.Connection,
+  limit: Int,
+) -> List(Result(meal.Meal, List(decode.DecodeError))) {
+  select.new()
+  |> select.from_table(table_name)
+  |> select.selects([
+    select.col("date"),
+    select.col("menu_id"),
+    select.col("uuid"),
+  ])
+  |> select.limit(limit)
+  |> select.order_by_desc("date")
+  |> select.to_query
+  |> sqlite.run_read_query(decode.dynamic, db_connection)
+  |> db.display_db_error
+  |> decode_meals
+}
+
+pub fn get_after(
+  db_connection: sqlight.Connection,
+  date: tempo.DateTime,
+) -> List(Result(meal.Meal, List(decode.DecodeError))) {
+  let timestamp = date |> datetime.to_unix_seconds
+  select.new()
+  |> select.from_table(table_name)
+  |> select.selects([
+    select.col("date"),
+    select.col("menu_id"),
+    select.col("uuid"),
+  ])
+  |> select.where(where.col("date") |> where.gte(where.int(timestamp)))
+  |> select.order_by_desc("date")
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error

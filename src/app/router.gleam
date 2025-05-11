@@ -1,3 +1,4 @@
+import app/adapters/meal as meal_adapter
 import app/adapters/recipe as recipe_adapter
 import app/helpers/decoding
 import app/models/date as date_model
@@ -5,6 +6,7 @@ import app/pages
 import app/pages/date_selection
 import app/pages/generated_meals
 import app/pages/layout.{layout}
+import app/pages/meals as meal_list_page
 import app/pages/recipes
 import app/routes/recipe_routes
 import app/services/meals
@@ -19,11 +21,14 @@ import gleam/list
 import gleam/result
 import simplifile
 import tempo/datetime
+import tempo/duration
 import tempo/instant
 import youid/uuid
 
 import lustre/element
 import wisp.{type Request, type Response}
+
+const days_in_week = 7
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
   web.middleware(req, ctx, fn(_req) {
@@ -65,6 +70,15 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             pages.error(error_message)
             |> render
         }
+      }
+      ["meals-list"] -> {
+        let one_week_ago =
+          instant.now()
+          |> instant.as_local_datetime
+          |> datetime.subtract(duration.days(days_in_week))
+        let all_meals = meal_adapter.get_after(ctx.connection, one_week_ago)
+        meal_list_page.index(all_meals)
+        |> render
       }
       ["replace-recipe"] -> {
         use req <- web.middleware(req, ctx)

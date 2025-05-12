@@ -51,11 +51,7 @@ pub fn get_all(
 ) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("date"),
-    select.col("menu_id"),
-    select.col("uuid"),
-  ])
+  |> select.selects([select.col("*")])
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
@@ -68,11 +64,7 @@ pub fn get_limited_to(
 ) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("date"),
-    select.col("menu_id"),
-    select.col("uuid"),
-  ])
+  |> select.selects([select.col("*")])
   |> select.limit(limit)
   |> select.order_by_desc("date")
   |> select.to_query
@@ -88,11 +80,7 @@ pub fn get_after(
   let timestamp = date |> datetime.to_unix_seconds
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("date"),
-    select.col("menu_id"),
-    select.col("uuid"),
-  ])
+  |> select.selects([select.col("*")])
   |> select.where(where.col("date") |> where.gte(where.int(timestamp)))
   |> select.order_by_desc("date")
   |> select.to_query
@@ -108,11 +96,7 @@ pub fn get(
   let uuid = meal_id |> uuid.to_string
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("date"),
-    select.col("menu_id"),
-    select.col("uuid"),
-  ])
+  |> select.selects([select.col("*")])
   |> select.where(where.col("uuid") |> where.eq(where.string(uuid)))
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)

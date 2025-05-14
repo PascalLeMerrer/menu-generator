@@ -4,8 +4,8 @@ import app/helpers/decoding
 import app/models/date as date_model
 import app/pages
 import app/pages/date_selection
-import app/pages/generated_meals
 import app/pages/layout.{layout}
+import app/pages/meal_renderer
 import app/pages/meals as meal_list_page
 import app/pages/recipes
 import app/routes/recipe_routes
@@ -101,7 +101,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
             case meals {
               Ok([generated_meals]) ->
-                [generated_meals.view_meal(generated_meals)]
+                [meal_renderer.view(generated_meals)]
                 |> layout
                 |> render
               Error(message) -> error_message(message)

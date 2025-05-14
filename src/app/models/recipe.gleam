@@ -1,8 +1,6 @@
-import app/models/meal
 import gleam/dynamic
 import gleam/dynamic/decode as dd
 
-import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
 import wisp
@@ -70,16 +68,4 @@ pub fn decode(fields: dynamic.Dynamic) -> Result(Recipe, List(dd.DecodeError)) {
     }
     Error(decoding_errors) -> Error(decoding_errors)
   }
-}
-
-pub fn add_recipes_to_meals(
-  recipes: List(Recipe),
-  meals: List(meal.Meal),
-) -> List(Recipe) {
-  list.zip(meals, recipes)
-  |> list.map(fn(item) { add_to_meal(item.0, item.1) })
-}
-
-pub fn add_to_meal(meal: meal.Meal, recipe: Recipe) -> Recipe {
-  Recipe(..recipe, meal_id: Some(meal.uuid), uuid: Some(uuid.v4()))
 }

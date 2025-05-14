@@ -1,4 +1,5 @@
 import gleam/list
+import gleam/option
 import gleam/result
 import tempo
 import youid/uuid
@@ -35,7 +36,7 @@ fn add_random_recipes_to_meals(
     valid_recipes, [] -> {
       let maybe_cloned_recipes =
         valid_recipes
-        |> recipe.add_recipes_to_meals(meals)
+        |> add_recipes_to_meals(meals)
         |> recipe_adapter.bulk_insert(ctx.connection)
         |> result.partition
       case maybe_cloned_recipes {
@@ -70,4 +71,20 @@ pub fn replace_recipe(
     }
     _ -> Error("Erreur lors de la lecture du repas à modifier")
   }
+}
+
+fn add_recipes_to_meals(
+  recipes: List(recipe.Recipe),
+  meals: List(meal.Meal),
+) -> List(recipe.Recipe) {
+  list.zip(meals, recipes)
+  |> list.map(fn(item) { add_to_meal(item.0, item.1) })
+}
+
+fn add_to_meal(meal: meal.Meal, recipe: recipe.Recipe) -> recipe.Recipe {
+  recipe.Recipe(
+    ..recipe,
+    meal_id: option.Some(meal.uuid),
+    uuid: option.Some(uuid.v4()),
+  )
 }

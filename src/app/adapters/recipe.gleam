@@ -14,7 +14,7 @@ import youid/uuid
 import cake/where
 import sqlight
 
-const table_name = "recipes"
+pub const table_name = "recipes"
 
 pub const schema = "-- recipes that could be selected for new menus
   CREATE TABLE IF NOT EXISTS "

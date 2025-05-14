@@ -1,8 +1,10 @@
 import app/adapters/db
 import app/models/meal
+import app/models/recipe
 import cake/adapter/sqlite
 import cake/delete
 import cake/insert
+import cake/join
 import cake/select
 import cake/where
 import gleam/dynamic/decode
@@ -55,7 +57,7 @@ pub fn get_all(
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
-  |> decode_meals
+  |> decode_meals()
 }
 
 pub fn get_limited_to(
@@ -70,23 +72,39 @@ pub fn get_limited_to(
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
-  |> decode_meals
+  |> decode_meals()
 }
 
 pub fn get_after(
   db_connection: sqlight.Connection,
   date: tempo.DateTime,
-) -> List(Result(meal.Meal, List(decode.DecodeError))) {
+) -> List(Result(#(meal.Meal, recipe.Recipe), List(decode.DecodeError))) {
   let timestamp = date |> datetime.to_unix_seconds
-  select.new()
-  |> select.from_table(table_name)
-  |> select.selects([select.col("*")])
-  |> select.where(where.col("date") |> where.gte(where.int(timestamp)))
-  |> select.order_by_desc("date")
-  |> select.to_query
+
+  let query = {
+    select.new()
+    |> select.from_table(table_name)
+    |> select.selects([select.col(table_name <> ".*"), select.col("r.*")])
+    |> select.join(join.inner(
+      with: join.table("recipes"),
+      on: where.col("r.meal_id") |> where.eq(where.col("meals.uuid")),
+      alias: "r",
+    ))
+    |> select.where(where.col("date") |> where.gte(where.int(timestamp)))
+    |> select.order_by_desc("date")
+    |> select.to_query
+  }
+
+  // To trace the SQL query: 
+  // query
+  // |> sqlite.read_query_to_prepared_statement
+  // |> cake.get_sql
+  // |> echo
+
+  query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
-  |> decode_meals
+  |> decode_meals_with_recipes()
 }
 
 pub fn get(
@@ -101,7 +119,7 @@ pub fn get(
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
-  |> decode_meals
+  |> decode_meals()
 }
 
 pub fn delete_(
@@ -124,6 +142,33 @@ fn decode_meals(
     Ok(records) -> {
       records
       |> list.map(meal.decode)
+    }
+
+    Error(sqlight.SqlightError(code, message, _)) -> {
+      let error_code =
+        code
+        |> sqlight.error_code_to_int
+        |> int.to_string
+      [
+        Error([
+          decode.DecodeError(
+            expected: "",
+            found: "Database error: " <> message <> " (" <> error_code <> ")",
+            path: [""],
+          ),
+        ]),
+      ]
+    }
+  }
+}
+
+fn decode_meals_with_recipes(
+  rows: Result(List(decode.Dynamic), sqlight.Error),
+) -> List(Result(#(meal.Meal, recipe.Recipe), List(decode.DecodeError))) {
+  case rows {
+    Ok(records) -> {
+      records
+      |> list.map(meal.decode_meal_with_recipe)
     }
 
     Error(sqlight.SqlightError(code, message, _)) -> {

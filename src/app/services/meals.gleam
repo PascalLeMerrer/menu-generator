@@ -62,7 +62,7 @@ pub fn replace_recipe(
       let selected_recipes = add_random_recipes_to_meals(ctx, [valid_meal])
       case selected_recipes {
         Ok(_) -> {
-          let _ = recipe_adapter.delete_(recipe_id, ctx.connection)
+          let _ = recipe_adapter.delete(recipe_id, ctx.connection)
 
           selected_recipes
         }

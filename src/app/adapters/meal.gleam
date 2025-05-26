@@ -2,7 +2,7 @@ import app/adapters/db
 import app/models/meal
 import app/models/recipe
 import cake/adapter/sqlite
-import cake/delete
+import cake/delete as delete_statement
 import cake/insert
 import cake/join
 import cake/select
@@ -127,10 +127,10 @@ pub fn delete_(
   db_connection: sqlight.Connection,
 ) -> Result(List(decode.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
-  delete.new()
-  |> delete.table(table_name)
-  |> delete.where(where.col("uuid") |> where.eq(where.string(uuid)))
-  |> delete.to_query
+  delete_statement.new()
+  |> delete_statement.table(table_name)
+  |> delete_statement.where(where.col("uuid") |> where.eq(where.string(uuid)))
+  |> delete_statement.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
   |> db.display_db_error
 }

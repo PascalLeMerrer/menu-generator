@@ -5,9 +5,8 @@ import app/pages/meal_renderer
 import gleam/dynamic/decode
 import gleam/list
 import lustre/element.{type Element, text}
-import wisp
-
 import lustre/element/html.{div}
+import wisp
 
 pub fn index(
   meals: List(Result(#(meal.Meal, recipe.Recipe), List(decode.DecodeError))),

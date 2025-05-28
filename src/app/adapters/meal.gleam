@@ -1,6 +1,7 @@
 import app/adapters/db
 import app/models/meal
 import app/models/recipe
+import cake
 import cake/adapter/sqlite
 import cake/delete as delete_statement
 import cake/insert
@@ -112,25 +113,45 @@ pub fn get(
   db_connection: sqlight.Connection,
 ) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   let uuid = meal_id |> uuid.to_string
-  select.new()
-  |> select.from_table(table_name)
-  |> select.selects([select.col("*")])
-  |> select.where(where.col("uuid") |> where.eq(where.string(uuid)))
-  |> select.to_query
+  let query = {
+    select.new()
+    |> select.from_table(table_name)
+    |> select.selects([select.col("*")])
+    |> select.where(where.col("uuid") |> where.eq(where.string(uuid)))
+    |> select.to_query
+  }
+
+  query
+  |> sqlite.read_query_to_prepared_statement
+  |> cake.get_sql
+  |> echo
+
+  query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
   |> decode_meals()
 }
 
-pub fn delete_(
+pub fn delete(
   uuid: uuid.Uuid,
   db_connection: sqlight.Connection,
 ) -> Result(List(decode.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
-  delete_statement.new()
-  |> delete_statement.table(table_name)
-  |> delete_statement.where(where.col("uuid") |> where.eq(where.string(uuid)))
-  |> delete_statement.to_query
+  echo "step 2"
+
+  let query = {
+    delete_statement.new()
+    |> delete_statement.table(table_name)
+    |> delete_statement.where(where.col("uuid") |> where.eq(where.string(uuid)))
+    |> delete_statement.to_query
+  }
+
+  query
+  |> sqlite.write_query_to_prepared_statement
+  |> cake.get_sql
+  |> echo
+
+  query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
   |> db.display_db_error
 }

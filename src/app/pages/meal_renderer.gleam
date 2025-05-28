@@ -56,6 +56,16 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
       span(
         [
           class(""),
+          hx.delete("meals/" <> meal_id),
+          // the closest div, i.e. the parent
+          hx.target(hx.CssSelector("closest .generated_menu")),
+          hx.swap(hx.OuterHTML, option.None),
+        ],
+        [text("Supprimer")],
+      ),
+      span(
+        [
+          class(""),
           hx.post("recipe-ingredients"),
           hx.vals(
             json.object([#("recipe_id", recipe_id |> json.string)]),

@@ -26,7 +26,10 @@ pub const schema = "-- recipes that could be selected for new menus
     steps TEXT NOT NULL,
     title TEXT NOT NULL,
     uuid TEXT,
-    FOREIGN KEY(meal_id) REFERENCES meal(uuid) ON DELETE CASCADE
+    CONSTRAINT fk_meal
+      FOREIGN KEY(meal_id)
+      REFERENCES meal(uuid)
+      ON DELETE CASCADE
     );"
 
 pub fn bulk_insert(

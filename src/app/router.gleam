@@ -19,6 +19,7 @@ import gleam/json.{
 }
 import gleam/list
 import gleam/result
+import gleam/string_tree
 import simplifile
 import tempo/datetime
 import tempo/duration
@@ -42,6 +43,29 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         [pages.upload()]
         |> layout
         |> render
+      }
+      ["meals", meal_id] -> {
+        let parsed_parameters = {
+          use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
+          Ok(parsed_meal_id)
+        }
+        case parsed_parameters {
+          Ok(valid_meal_id) ->
+            case req.method {
+              http.Delete -> {
+                echo "step 1"
+                case meal_adapter.delete(valid_meal_id, ctx.connection) {
+                  Ok(_) -> string_tree.new() |> wisp.html_response(200)
+                  Error(_) -> error_message("L'affacement du repas a échoué")
+                }
+              }
+              _ -> wisp.method_not_allowed([])
+            }
+          Error(Nil) ->
+            error_message(
+              meal_id <> " n'est pas un identifiant de repas valide",
+            )
+        }
       }
       ["meals-generate"] -> {
         use req <- web.middleware(req, ctx)

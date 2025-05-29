@@ -14,7 +14,7 @@ pub type Recipe {
     meal_id: Option(uuid.Uuid),
     steps: String,
     title: String,
-    uuid: Option(uuid.Uuid),
+    uuid: uuid.Uuid,
   )
 }
 
@@ -45,26 +45,41 @@ pub fn decode(fields: dynamic.Dynamic) -> Result(Recipe, List(dd.DecodeError)) {
           }
       }
 
-      let recipe_uuid = case recipe_id {
-        None -> None
+      case recipe_id {
+        None -> {
+          wisp.log_error("Identifiant de recette manquant")
+          Error([
+            dd.DecodeError(
+              expected: "Identifiant de recette",
+              found: "None",
+              path: [],
+            ),
+          ])
+        }
         Some(id) ->
           case uuid.from_string(id) {
-            Ok(valid_uuid) -> Some(valid_uuid)
+            Ok(valid_uuid) ->
+              Ok(Recipe(
+                image: image,
+                ingredients: ingredients |> string.split(separator),
+                meal_id: meal_uuid,
+                steps: steps,
+                title: title,
+                uuid: valid_uuid,
+              ))
+
             Error(_) -> {
               wisp.log_error("ERROR: " <> id <> " is not a valid recipe UUID")
-              None
+              Error([
+                dd.DecodeError(
+                  expected: "Identifiant de recette",
+                  found: id,
+                  path: [],
+                ),
+              ])
             }
           }
       }
-
-      Ok(Recipe(
-        image: image,
-        ingredients: ingredients |> string.split(separator),
-        meal_id: meal_uuid,
-        steps: steps,
-        title: title,
-        uuid: recipe_uuid,
-      ))
     }
     Error(decoding_errors) -> Error(decoding_errors)
   }

@@ -6,10 +6,13 @@ import gleam/result
 import gleeunit/should
 import youid/uuid
 
-const uuid1: String = "1ff0d722-8b82-46fa-a418-a3881e0cce46"
+const meal_uuid: String = "1ff0d722-8b82-46fa-a418-a3881e0cce46"
+
+const recipe_uuid: String = "18325070-aca8-49b1-9939-baf8b25ee9d1"
 
 fn oven_baked_bar() {
-  let assert Ok(meal_id) = uuid.from_string(uuid1)
+  let assert Ok(meal_id) = uuid.from_string(meal_uuid)
+  let assert Ok(recipe_id) = uuid.from_string(recipe_uuid)
 
   recipe.Recipe(
     image: "https://assets.afcdn.com/image1.jpg",
@@ -17,19 +20,21 @@ fn oven_baked_bar() {
     meal_id: Some(meal_id),
     steps: "Etape 1\nEtape 2",
     title: "Bar au four",
-    uuid: option.None,
+    uuid: recipe_id,
   )
 }
 
 fn flan() {
-  let assert Ok(uuid) = uuid.from_string(uuid1)
+  let assert Ok(uuid) = uuid.from_string(meal_uuid)
+  let assert Ok(recipe_id) = uuid.from_string(recipe_uuid)
+
   recipe.Recipe(
     image: "https://assets.afcdn.com/image2.jpg",
     ingredients: ["1 flan", "1 pâté de campagne"],
     meal_id: Some(uuid),
     steps: "Etape A\nEtape B",
     title: "Flan au pâté",
-    uuid: option.None,
+    uuid: recipe_id,
   )
 }
 
@@ -91,7 +96,7 @@ pub fn from_xml_decodes_cookbook_with_multiple_recipes_test() {
    </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> replace_uuid
+  |> replace_uuids
   |> should.equal(Ok([oven_baked_bar(), flan()]))
 }
 
@@ -137,7 +142,7 @@ pub fn from_xml_decodes_recipes_with_empty_ingredients_test() {
    </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> replace_uuid
+  |> replace_uuids
   |> should.equal(Ok([oven_baked_bar(), flan()]))
 }
 
@@ -183,7 +188,7 @@ pub fn from_xml_decodes_recipes_with_empty_steps_test() {
    </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> replace_uuid
+  |> replace_uuids
   |> should.equal(Ok([oven_baked_bar(), flan()]))
 }
 
@@ -223,7 +228,7 @@ pub fn from_xml_decodes_recipes_without_steps_test() {
    </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> replace_uuid
+  |> replace_uuids
   |> should.equal(Ok([recipe.Recipe(..oven_baked_bar(), steps: ""), flan()]))
 }
 
@@ -246,7 +251,7 @@ pub fn from_xml_decodes_cookbook_containing_one_recipe_only_test() {
     </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> replace_uuid
+  |> replace_uuids
   |> should.equal(Ok([oven_baked_bar()]))
 }
 
@@ -268,7 +273,7 @@ pub fn from_xml_decodes_recipe_with_only_one_ingredient_test() {
     </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> replace_uuid
+  |> replace_uuids
   |> should.equal(
     Ok([recipe.Recipe(..oven_baked_bar(), ingredients: ["1 oignon"])]),
   )
@@ -292,20 +297,25 @@ pub fn from_xml_decodes_recipe_with_only_one_step_test() {
     </cookbook>
   "
   |> recipe_routes.from_xml()
-  |> replace_uuid
+  |> replace_uuids
   |> should.equal(Ok([recipe.Recipe(..oven_baked_bar(), steps: "Etape 1")]))
 }
 
-// replace the random meal IDs with known ones so we can easily compare actual recipes with expected results
-fn replace_uuid(
+// replace the random meal and recipe IDs with known ones so we can easily compare actual recipes with expected results
+fn replace_uuids(
   maybe_recipes: Result(List(recipe.Recipe), a),
 ) -> Result(List(recipe.Recipe), a) {
   maybe_recipes
   |> result.try(fn(recipes) {
     recipes
     |> list.map(fn(recipe) {
-      let assert Ok(uuid) = uuid.from_string(uuid1)
-      recipe.Recipe(..recipe, meal_id: Some(uuid))
+      let assert Ok(valid_meal_uuid) = uuid.from_string(meal_uuid)
+      let assert Ok(valid_recipe_uuid) = uuid.from_string(recipe_uuid)
+      recipe.Recipe(
+        ..recipe,
+        meal_id: Some(valid_meal_uuid),
+        uuid: valid_recipe_uuid,
+      )
     })
     |> Ok
   })

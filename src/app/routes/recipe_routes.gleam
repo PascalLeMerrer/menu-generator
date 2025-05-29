@@ -5,6 +5,7 @@ import gleam/option.{None}
 import gleam/string
 import gleam/string_tree
 import xmljson
+import youid/uuid
 
 import app/models/recipe.{type Recipe, Recipe}
 
@@ -56,7 +57,7 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
         |> list.filter(fn(x) { x != "" })
         |> string.join(with: "\n"),
       title:,
-      uuid: None,
+      uuid: uuid.v4(),
     ))
   }
 

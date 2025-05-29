@@ -25,7 +25,7 @@ pub const schema = "-- recipes that could be selected for new menus
     meal_id TEXT,
     steps TEXT NOT NULL,
     title TEXT NOT NULL,
-    uuid TEXT,
+    uuid TEXT NOT NULL,
     CONSTRAINT fk_meal
       FOREIGN KEY(meal_id)
       REFERENCES meal(uuid)
@@ -48,11 +48,7 @@ pub fn bulk_insert(
       },
       insert.string(recipe.steps),
       insert.string(recipe.title),
-      // only recipes attached to a meal have a uuid
-      case recipe.uuid {
-        Some(id) -> insert.string(id |> uuid.to_string)
-        None -> insert.null()
-      },
+      insert.string(recipe.uuid |> uuid.to_string),
     ]
     |> insert.row
   })

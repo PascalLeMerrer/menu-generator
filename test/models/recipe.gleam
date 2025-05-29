@@ -32,7 +32,7 @@ pub fn decodes_recipe_with_one_step_and_one_ingredient_test() {
       meal_id: Some(meal_id),
       steps: "a unique step",
       ingredients: ["a unique ingredient"],
-      uuid: Some(recipe_id),
+      uuid: recipe_id,
     )),
   )
 }
@@ -56,7 +56,7 @@ pub fn decodes_recipe_with_several_steps_and_ingredients_test() {
       meal_id: Some(meal_id),
       steps: "A first step.\nA second step",
       ingredients: ["a first ingredient", "a second ingredient"],
-      uuid: Some(recipe_id),
+      uuid: recipe_id,
     )),
   )
 }
@@ -91,7 +91,7 @@ pub fn decodes_real_recipe_test() {
         "1 pincée de Piment", "3 cuil. à soupe Huile", "2 gousses d'ail", "Sel",
         "Poivre",
       ],
-      uuid: Some(real_recipe_id),
+      uuid: real_recipe_id,
     )),
   )
 }

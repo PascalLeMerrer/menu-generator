@@ -105,7 +105,7 @@ pub fn decode_meal_with_recipe(
               meal_id: option.Some(valid_meal_id),
               steps: steps,
               title: title,
-              uuid: option.Some(valid_recipe_id),
+              uuid: valid_recipe_id,
             ),
           ))
         Error(_), _, _ ->

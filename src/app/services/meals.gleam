@@ -82,9 +82,5 @@ fn add_recipes_to_meals(
 }
 
 fn add_to_meal(meal: meal.Meal, recipe: recipe.Recipe) -> recipe.Recipe {
-  recipe.Recipe(
-    ..recipe,
-    meal_id: option.Some(meal.uuid),
-    uuid: option.Some(uuid.v4()),
-  )
+  recipe.Recipe(..recipe, meal_id: option.Some(meal.uuid), uuid: uuid.v4())
 }

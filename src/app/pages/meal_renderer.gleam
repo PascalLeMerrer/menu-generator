@@ -20,8 +20,7 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
     _ -> recipe.image
   }
   let meal_id = generated_meal.uuid |> uuid.to_string()
-  let recipe_id = recipe.uuid |> option.map(uuid.to_string) |> option.unwrap("")
-
+  let recipe_id = recipe.uuid |> uuid.to_string
   let date_label = generated_meal.date |> date_helper.meal_moments
   div([class("generated_menu")], [
     span([class("date")], [

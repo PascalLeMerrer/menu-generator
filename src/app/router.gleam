@@ -158,9 +158,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         }
 
         case parsed_recipe_id {
-          Ok(valid_meal_id) -> {
+          Ok(valid_recipe_id) -> {
             let recipe =
-              recipe_adapter.find_by_id(ctx.connection, valid_meal_id)
+              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
 
             case recipe {
               [Ok(valid_recipe)] ->
@@ -172,7 +172,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
               [_, _, ..] -> error_message("ingrédients non trouvés 3")
             }
           }
-          Error(_) -> error_message("l'identifiant du repas est invalide")
+          Error(_) -> error_message("l'identifiant de la recette est invalide")
         }
       }
       ["recipes"] -> {

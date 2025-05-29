@@ -1,12 +1,14 @@
 import app/helpers/decoding
 import app/models/recipe
 import gleam/dynamic/decode
+import gleam/json
 import gleam/list
 import hx
 import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, img, li, span, ul}
 import wisp
+import youid/uuid
 
 pub fn index(
   recipes: List(Result(recipe.Recipe, List(decode.DecodeError))),
@@ -28,17 +30,35 @@ fn view_recipe(
       }
       [text("Erreur de décodage de la recette ")]
     }
-    Ok(valid_recipe) -> [
-      {
-        let image_url = case valid_recipe.image {
-          "" -> "/static/placeholder-100x100.png"
-          _ -> valid_recipe.image
-        }
+    Ok(valid_recipe) -> {
+      let image_url = case valid_recipe.image {
+        "" -> "/static/placeholder-100x100.png"
+        _ -> valid_recipe.image
+      }
+      let recipe_id = valid_recipe.uuid |> uuid.to_string
 
-        img([src(image_url), height(100), width(100)])
-      },
-      text(valid_recipe.title),
-    ]
+      [
+        div([class("recipe")], [
+          img([class("image"), src(image_url), height(100), width(100)]),
+          span([class("title")], [text(valid_recipe.title)]),
+          div([class("actions")], [
+            span(
+              [
+                class("action"),
+                hx.post("recipe-ingredients"),
+                hx.vals(
+                  json.object([#("recipe_id", recipe_id |> json.string)]),
+                  False,
+                ),
+                hx.target(hx.CssSelector("next .ingredients")),
+              ],
+              [text("Ingrédients")],
+            ),
+          ]),
+          div([class("ingredients")], []),
+        ]),
+      ]
+    }
   })
 }
 

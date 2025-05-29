@@ -59,16 +59,12 @@ nav > div:hover {
   border: 1px solid #444444;
 }
 
-.generated_menu > * {
-  padding: 5px;
-}
-
 .generated_menu .date {
   grid-column: 1;
   grid-row: 1;
 }
 
-.generated_menu .image {
+.generated_menu .imagee {
   grid-column: 2;
   grid-row: 1;
 }
@@ -81,7 +77,6 @@ nav > div:hover {
 .generated_menu .actions {
   grid-column: 4;
   grid-row: 1;
-  cursor:pointer;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -91,6 +86,45 @@ nav > div:hover {
   grid-column: 1/5;
   grid-row: 2;
 }
+
+.recipe{
+  display: grid;
+  grid-template-columns: 100px 300px 100px;
+  margin: 10px;
+  border: 1px solid #444444;
+}
+
+.recipe .imagee {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.recipe .title {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.recipe .actions {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action {
+  cursor:pointer;
+}
+
+.recipe .ingredients {
+  grid-column: 1/4;
+  grid-row: 2;
+}
+
+.generated_menu > *, .recipe > * {
+  padding: 5px;
+}
+
 
 .horizontal-container {
   display: flex;

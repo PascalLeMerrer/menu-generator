@@ -175,6 +175,37 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           Error(_) -> error_message("l'identifiant de la recette est invalide")
         }
       }
+      ["recipe-steps"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
+
+        let parsed_recipe_id = {
+          use recipe_id <- result.try(list.key_find(
+            formdata.values,
+            "recipe_id",
+          ))
+          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(parsed_recipe_id)
+        }
+
+        case parsed_recipe_id {
+          Ok(valid_recipe_id) -> {
+            let recipe =
+              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
+
+            case recipe {
+              [Ok(valid_recipe)] ->
+                [recipes.view_steps(valid_recipe)]
+                |> layout
+                |> render
+              [Error(_)] -> error_message("étapes non trouvées 1")
+              [] -> error_message("étapes non trouvées 2")
+              [_, _, ..] -> error_message("étapes non trouvées 3")
+            }
+          }
+          Error(_) -> error_message("l'identifiant de la recette est invalide")
+        }
+      }
       ["recipes"] -> {
         let all_recipes = recipe_adapter.get_all(ctx.connection)
         recipes.index(all_recipes)

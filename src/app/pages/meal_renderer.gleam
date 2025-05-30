@@ -74,7 +74,20 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
         ],
         [text("Ingrédients")],
       ),
+      span(
+        [
+          class("action"),
+          hx.post("recipe-steps"),
+          hx.vals(
+            json.object([#("recipe_id", recipe_id |> json.string)]),
+            False,
+          ),
+          hx.target(hx.CssSelector("next .steps")),
+        ],
+        [text("Étapes")],
+      ),
     ]),
     div([class("ingredients")], []),
+    div([class("steps")], []),
   ])
 }

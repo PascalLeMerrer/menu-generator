@@ -3,10 +3,11 @@ import app/models/recipe
 import gleam/dynamic/decode
 import gleam/json
 import gleam/list
+import gleam/string
 import hx
 import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
-import lustre/element/html.{div, img, li, span, ul}
+import lustre/element/html.{div, img, li, ol, span, ul}
 import wisp
 import youid/uuid
 
@@ -54,8 +55,21 @@ fn view_recipe(
               ],
               [text("Ingrédients")],
             ),
+            span(
+              [
+                class("action"),
+                hx.post("recipe-steps"),
+                hx.vals(
+                  json.object([#("recipe_id", recipe_id |> json.string)]),
+                  False,
+                ),
+                hx.target(hx.CssSelector("next .steps")),
+              ],
+              [text("Étapes")],
+            ),
           ]),
           div([class("ingredients")], []),
+          div([class("steps")], []),
         ]),
       ]
     }
@@ -68,6 +82,20 @@ pub fn view_ingredients(recipe: recipe.Recipe) -> Element(t) {
       [class("ingredient-list")],
       recipe.ingredients
         |> list.map(fn(ingredient) { li([], [text(ingredient)]) }),
+    ),
+    span([attribute.data("remove", "true"), class("close-button")], [
+      text("masquer"),
+    ]),
+  ])
+}
+
+pub fn view_steps(recipe: recipe.Recipe) -> Element(t) {
+  div([hx.ext(["remove"]), class("horizontal-container")], [
+    ol(
+      [class("step-list")],
+      recipe.steps
+        |> string.split("\n")
+        |> list.map(fn(step) { li([], [text(step)]) }),
     ),
     span([attribute.data("remove", "true"), class("close-button")], [
       text("masquer"),

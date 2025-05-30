@@ -87,6 +87,11 @@ nav > div:hover {
   grid-row: 2;
 }
 
+.generated_menu .steps {
+  grid-column: 1/5;
+  grid-row: 3;
+}
+
 .recipe{
   display: grid;
   grid-template-columns: 100px 300px 100px;
@@ -121,6 +126,12 @@ nav > div:hover {
   grid-row: 2;
 }
 
+
+.recipe .steps {
+  grid-column: 1/4;
+  grid-row: 3;
+}
+
 .generated_menu > *, .recipe > * {
   padding: 5px;
 }
@@ -131,7 +142,7 @@ nav > div:hover {
   flex-direction: row;
 }
 
-.ingredient-list{
+.ingredient-list, .step-list {
   flex-grow: 1;
 }
 

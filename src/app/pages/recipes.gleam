@@ -7,18 +7,21 @@ import gleam/string
 import hx
 import lustre/attribute.{class, height, src, width}
 import lustre/element.{type Element, text}
-import lustre/element/html.{div, img, li, ol, span, ul}
+import lustre/element/html.{div, h2, img, li, ol, span, ul}
 import wisp
 import youid/uuid
 
 pub fn index(
   recipes: List(Result(recipe.Recipe, List(decode.DecodeError))),
 ) -> Element(t) {
+ div([] , [
+    h2([], [text("Mes recettes")]),
   ul(
     [class("unstyled")],
     recipes
       |> list.map(fn(recipe) { view_recipe(recipe) }),
   )
+])
 }
 
 fn view_recipe(

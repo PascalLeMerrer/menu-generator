@@ -5,17 +5,23 @@ import app/pages/meal_renderer
 import gleam/dynamic/decode
 import gleam/list
 import lustre/element.{type Element, text}
-import lustre/element/html.{div}
+import lustre/element/html.{div, h2}
 import wisp
 
 pub fn index(
   meals: List(Result(#(meal.Meal, recipe.Recipe), List(decode.DecodeError))),
 ) -> Element(t) {
-  div(
-    [],
+  let rendered_meals =   
     meals
       |> list.reverse
-      |> list.map(fn(meal) { view_maybe_meal(meal) }),
+      |> list.map(fn(meal) { view_maybe_meal(meal) })
+      
+  div(
+    [],
+    [
+    h2([], [text("Mes repas")]),
+      ..rendered_meals
+    ]
   )
 }
 

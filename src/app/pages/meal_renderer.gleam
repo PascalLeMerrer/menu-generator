@@ -38,7 +38,7 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
       span(
         [
           class("action"),
-          hx.post("replace-recipe"),
+          hx.post("recipes-replace"),
           hx.vals(
             json.object([
               #("meal_id", meal_id |> json.string),
@@ -50,7 +50,7 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
           hx.target(hx.CssSelector("closest .generated_menu")),
           hx.swap(hx.OuterHTML, option.None),
         ],
-        [text("Remplacer")],
+        [text("Suggérer")],
       ),
       span(
         [
@@ -65,7 +65,7 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
       span(
         [
           class("action"),
-          hx.post("recipe-ingredients"),
+          hx.post("recipes-ingredients"),
           hx.vals(
             json.object([#("recipe_id", recipe_id |> json.string)]),
             False,
@@ -77,7 +77,7 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
       span(
         [
           class("action"),
-          hx.post("recipe-steps"),
+          hx.post("recipes-steps"),
           hx.vals(
             json.object([#("recipe_id", recipe_id |> json.string)]),
             False,

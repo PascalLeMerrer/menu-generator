@@ -5,7 +5,7 @@ import gleam/list
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, h2}
 
-pub fn index(meals: List(#(meal.Meal, recipe.Recipe))) -> Element(t) {
+pub fn page(meals: List(#(meal.Meal, recipe.Recipe))) -> Element(t) {
   div([], [
     h2([], [text("Menus proposés")]),
     ..{

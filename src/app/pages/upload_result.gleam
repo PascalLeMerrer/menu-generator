@@ -5,7 +5,7 @@ import lustre/attribute.{class}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, div, h1, p}
 
-pub fn index(recipes: List(recipe.Recipe)) -> Element(t) {
+pub fn page(recipes: List(recipe.Recipe)) -> Element(t) {
   let imported_recipe_count = list.length(recipes) |> int.to_string
   div([class("app")], [
     h1([class("app-title")], [text("Importation des recettes réussie")]),

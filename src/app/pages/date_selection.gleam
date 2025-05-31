@@ -15,7 +15,7 @@ const default_meals = [
   "Jeudi soir",
 ]
 
-pub fn index(dates: List(tempo.DateTime)) -> Element(t) {
+pub fn page(dates: List(tempo.DateTime)) -> Element(t) {
   div([], [
     h2([], [text("Sélectionner les repas à prévoir")]),
     form(

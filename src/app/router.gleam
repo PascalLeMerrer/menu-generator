@@ -2,12 +2,16 @@ import app/adapters/meal as meal_adapter
 import app/adapters/recipe as recipe_adapter
 import app/helpers/decoding
 import app/models/date as date_model
-import app/pages
 import app/pages/date_selection
+import app/pages/error
+import app/pages/generated_meals
+import app/pages/home
 import app/pages/layout.{layout}
 import app/pages/meal_renderer
 import app/pages/meals as meal_list_page
 import app/pages/recipes
+import app/pages/upload
+import app/pages/upload_result
 import app/routes/recipe_routes
 import app/services/meals
 import app/web.{type Context}
@@ -35,15 +39,17 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   web.middleware(req, ctx, fn(_req) {
     case wisp.path_segments(req) {
       [] -> {
-        [pages.home()]
+        [home.page()]
         |> layout
         |> render
       }
-      ["import"] -> {
-        [pages.upload()]
-        |> layout
+
+      ["date-select"] -> {
+        let today = instant.now() |> instant.as_local_date()
+        date_selection.page(date_model.for_potential_meals(today))
         |> render
       }
+
       ["meals", meal_id] -> {
         let parsed_parameters = {
           use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
@@ -67,6 +73,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             )
         }
       }
+
       ["meals-generate"] -> {
         use req <- web.middleware(req, ctx)
         use formdata <- wisp.require_form(req)
@@ -87,24 +94,68 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         }
         case meals {
           Ok(generated_meals) ->
-            [pages.generated_meals(generated_meals)]
+            [generated_meals.page(generated_meals)]
             |> layout
             |> render
-          Error(error_message) ->
-            pages.error(error_message)
-            |> render
+          Error(message) -> error_message(message)
         }
       }
+
       ["meals-list"] -> {
         let one_week_ago =
           instant.now()
           |> instant.as_local_datetime
           |> datetime.subtract(duration.days(days_in_week))
         let all_meals = meal_adapter.get_after(ctx.connection, one_week_ago)
-        meal_list_page.index(all_meals)
+        meal_list_page.page(all_meals)
         |> render
       }
-      ["replace-recipe"] -> {
+
+      ["recipes-import"] -> {
+        [upload.page()]
+        |> layout
+        |> render
+      }
+
+      ["recipes-ingredients"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
+
+        let parsed_recipe_id = {
+          use recipe_id <- result.try(list.key_find(
+            formdata.values,
+            "recipe_id",
+          ))
+          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(parsed_recipe_id)
+        }
+
+        case parsed_recipe_id {
+          Ok(valid_recipe_id) -> {
+            let recipe =
+              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
+
+            case recipe {
+              [Ok(valid_recipe)] ->
+                [recipes.view_ingredients(valid_recipe)]
+                |> layout
+                |> render
+              [Error(_)] -> error_message("ingrédients non trouvés 1")
+              [] -> error_message("ingrédients non trouvés 2")
+              [_, _, ..] -> error_message("ingrédients non trouvés 3")
+            }
+          }
+          Error(_) -> error_message("l'identifiant de la recette est invalide")
+        }
+      }
+
+      ["recipes-list"] -> {
+        let all_recipes = recipe_adapter.get_all(ctx.connection)
+        recipes.page(all_recipes)
+        |> render
+      }
+
+      ["recipes-replace"] -> {
         use req <- web.middleware(req, ctx)
         use formdata <- wisp.require_form(req)
         let parsed_parameters = {
@@ -139,43 +190,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             )
         }
       }
-      ["date-selection"] -> {
-        let today = instant.now() |> instant.as_local_date()
-        date_selection.index(date_model.for_potential_meals(today))
-        |> render
-      }
-      ["recipe-ingredients"] -> {
-        use req <- web.middleware(req, ctx)
-        use formdata <- wisp.require_form(req)
 
-        let parsed_recipe_id = {
-          use recipe_id <- result.try(list.key_find(
-            formdata.values,
-            "recipe_id",
-          ))
-          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
-          Ok(parsed_recipe_id)
-        }
-
-        case parsed_recipe_id {
-          Ok(valid_recipe_id) -> {
-            let recipe =
-              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
-
-            case recipe {
-              [Ok(valid_recipe)] ->
-                [recipes.view_ingredients(valid_recipe)]
-                |> layout
-                |> render
-              [Error(_)] -> error_message("ingrédients non trouvés 1")
-              [] -> error_message("ingrédients non trouvés 2")
-              [_, _, ..] -> error_message("ingrédients non trouvés 3")
-            }
-          }
-          Error(_) -> error_message("l'identifiant de la recette est invalide")
-        }
-      }
-      ["recipe-steps"] -> {
+      ["recipes-steps"] -> {
         use req <- web.middleware(req, ctx)
         use formdata <- wisp.require_form(req)
 
@@ -206,13 +222,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           Error(_) -> error_message("l'identifiant de la recette est invalide")
         }
       }
-      ["recipes"] -> {
-        let all_recipes = recipe_adapter.get_all(ctx.connection)
-        recipes.index(all_recipes)
-        |> render
-      }
 
-      ["recipes", "upload"] -> {
+      ["recipes-upload"] -> {
         use <- wisp.require_method(req, http.Post)
         use formdata <- wisp.require_form(req)
         let result: Result(String, Nil) = {
@@ -235,7 +246,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
               Ok(parsed_recipes) -> {
                 let _ =
                   parsed_recipes |> recipe_adapter.bulk_insert(ctx.connection)
-                [pages.upload_result(parsed_recipes)]
+                [upload_result.page(parsed_recipes)]
                 |> layout
                 |> render
               }
@@ -281,7 +292,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 }
 
 fn error_message(message: String) -> Response {
-  pages.error("Erreur : " <> message)
+  error.page("Erreur : " <> message)
   |> render
 }
 

@@ -2,14 +2,14 @@ import lustre/attribute.{class}
 import lustre/element.{type Element, text}
 import lustre/element/html.{div, form, h2, input}
 
-pub fn index() -> Element(t) {
+pub fn page() -> Element(t) {
   div([], [
     h2([], [text("Importer des recettes")]),
     form(
       [
         class("file-upload"),
         attribute.method("POST"),
-        attribute.action("/recipes/upload"),
+        attribute.action("/recipes-upload"),
         attribute.enctype("multipart/form-data"),
       ],
       [

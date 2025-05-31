@@ -8,21 +8,15 @@ import lustre/element.{type Element, text}
 import lustre/element/html.{div, h2}
 import wisp
 
-pub fn index(
+pub fn page(
   meals: List(Result(#(meal.Meal, recipe.Recipe), List(decode.DecodeError))),
 ) -> Element(t) {
-  let rendered_meals =   
+  let rendered_meals =
     meals
-      |> list.reverse
-      |> list.map(fn(meal) { view_maybe_meal(meal) })
-      
-  div(
-    [],
-    [
-    h2([], [text("Mes repas")]),
-      ..rendered_meals
-    ]
-  )
+    |> list.reverse
+    |> list.map(fn(meal) { view_maybe_meal(meal) })
+
+  div([], [h2([], [text("Mes repas")]), ..rendered_meals])
 }
 
 fn view_maybe_meal(

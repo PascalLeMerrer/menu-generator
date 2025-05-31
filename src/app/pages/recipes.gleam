@@ -11,17 +11,17 @@ import lustre/element/html.{div, h2, img, li, ol, span, ul}
 import wisp
 import youid/uuid
 
-pub fn index(
+pub fn page(
   recipes: List(Result(recipe.Recipe, List(decode.DecodeError))),
 ) -> Element(t) {
- div([] , [
+  div([], [
     h2([], [text("Mes recettes")]),
-  ul(
-    [class("unstyled")],
-    recipes
-      |> list.map(fn(recipe) { view_recipe(recipe) }),
-  )
-])
+    ul(
+      [class("unstyled")],
+      recipes
+        |> list.map(fn(recipe) { view_recipe(recipe) }),
+    ),
+  ])
 }
 
 fn view_recipe(
@@ -49,7 +49,7 @@ fn view_recipe(
             span(
               [
                 class("action"),
-                hx.post("recipe-ingredients"),
+                hx.post("recipes-ingredients"),
                 hx.vals(
                   json.object([#("recipe_id", recipe_id |> json.string)]),
                   False,
@@ -61,7 +61,7 @@ fn view_recipe(
             span(
               [
                 class("action"),
-                hx.post("recipe-steps"),
+                hx.post("recipes-steps"),
                 hx.vals(
                   json.object([#("recipe_id", recipe_id |> json.string)]),
                   False,

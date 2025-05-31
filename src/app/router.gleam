@@ -244,6 +244,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             let assert Ok(file_content) = simplifile.read(from: path)
             case recipe_routes.from_xml(file_content) {
               Ok(parsed_recipes) -> {
+                let _ = recipe_adapter.delete_unlinked(ctx.connection)
                 let _ =
                   parsed_recipes |> recipe_adapter.bulk_insert(ctx.connection)
                 [upload_result.page(parsed_recipes)]

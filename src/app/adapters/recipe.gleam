@@ -167,6 +167,19 @@ pub fn delete(
   |> db.display_db_error
 }
 
+// Delete all recipes that are not attached to a meal
+// i.e. the imported recipes 
+pub fn delete_unlinked(
+  db_connection: sqlight.Connection,
+) -> Result(List(decode.Dynamic), sqlight.Error) {
+  delete_statement.new()
+  |> delete_statement.table(table_name)
+  |> delete_statement.where(where.col("meal_id") |> where.is_null)
+  |> delete_statement.to_query
+  |> sqlite.run_write_query(decode.dynamic, db_connection)
+  |> db.display_db_error
+}
+
 fn decode_recipes(
   rows: Result(List(decode.Dynamic), sqlight.Error),
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {

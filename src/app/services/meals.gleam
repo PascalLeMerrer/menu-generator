@@ -50,15 +50,15 @@ fn add_random_recipes_to_meals(
 
 // replaces the current recipe in a given meal with a random one
 // TODO: ensure the new one is not the same as the previous one
-pub fn replace_recipe(
+pub fn replace__with_random_recipe(
   ctx: Context,
   meal_id: uuid.Uuid,
   recipe_id: uuid.Uuid,
 ) -> Result(List(#(meal.Meal, recipe.Recipe)), String) {
-  let meal = meal_adapter.get(meal_id, ctx.connection)
+  let meal = meal_adapter.get(ctx.connection, meal_id)
 
   case meal {
-    [Ok(valid_meal)] -> {
+    Ok(valid_meal) -> {
       let selected_recipes = add_random_recipes_to_meals(ctx, [valid_meal])
       case selected_recipes {
         Ok(_) -> {
@@ -81,6 +81,6 @@ fn add_recipes_to_meals(
   |> list.map(fn(item) { add_to_meal(item.0, item.1) })
 }
 
-fn add_to_meal(meal: meal.Meal, recipe: recipe.Recipe) -> recipe.Recipe {
+pub fn add_to_meal(meal: meal.Meal, recipe: recipe.Recipe) -> recipe.Recipe {
   recipe.Recipe(..recipe, meal_id: option.Some(meal.uuid), uuid: uuid.v4())
 }

@@ -109,6 +109,18 @@ pub fn find_by_meal_id(
   |> decode_recipes
 }
 
+pub fn get(
+  db_connection: sqlight.Connection,
+  recipe_id: uuid.Uuid,
+) -> Result(recipe.Recipe, String) {
+  let recipe = find_by_id(db_connection, recipe_id)
+
+  case recipe {
+    [Ok(valid_recipe)] -> Ok(valid_recipe)
+    _ -> Error("Erreur lors de la lecture de la recette")
+  }
+}
+
 pub fn find_by_id(
   db_connection: sqlight.Connection,
   recipe_id: uuid.Uuid,
@@ -126,6 +138,36 @@ pub fn find_by_id(
   ])
   |> select.where(where.col("uuid") |> where.eq(where.string(uuid)))
   |> select.to_query
+  |> sqlite.run_read_query(decode.dynamic, db_connection)
+  |> db.display_db_error
+  |> decode_recipes
+}
+
+pub fn find_by_content(db_connection: sqlight.Connection, content: String) {
+  let filter = "%" <> content <> "%"
+  let query = {
+    select.new()
+    |> select.from_table(table_name)
+    |> select.selects([
+      select.col("image"),
+      select.col("ingredients"),
+      select.col("meal_id"),
+      select.col("steps"),
+      select.col("title"),
+      select.col("uuid"),
+    ])
+    |> select.where(where.col("ingredients") |> where.like(filter))
+    |> select.or_where(where.col("title") |> where.like(filter))
+    |> select.to_query
+  }
+
+  // To trace the SQL query: 
+  // query
+  // |> sqlite.read_query_to_prepared_statement
+  // |> cake.get_sql
+  // |> echo
+
+  query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
   |> decode_recipes

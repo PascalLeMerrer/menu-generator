@@ -109,6 +109,18 @@ pub fn get_after(
 }
 
 pub fn get(
+  db_connection: sqlight.Connection,
+  meal_id: uuid.Uuid,
+) -> Result(meal.Meal, String) {
+  let meal = find_by_id(meal_id, db_connection)
+
+  case meal {
+    [Ok(valid_meal)] -> Ok(valid_meal)
+    _ -> Error("Erreur lors de la lecture du repas")
+  }
+}
+
+fn find_by_id(
   meal_id: uuid.Uuid,
   db_connection: sqlight.Connection,
 ) -> List(Result(meal.Meal, List(decode.DecodeError))) {

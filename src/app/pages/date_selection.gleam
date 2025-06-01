@@ -31,7 +31,6 @@ pub fn page(dates: List(tempo.DateTime)) -> Element(t) {
             |> list.map(checkbox),
         ),
         input([attribute.type_("submit"), attribute.value("Générer")]),
-        // div([attribute.id("menus")], []),
       ],
     ),
   ])

@@ -22,6 +22,7 @@ import gleam/json.{
   UnexpectedSequence,
 }
 import gleam/list
+import gleam/option
 import gleam/result
 import gleam/string_tree
 import simplifile
@@ -117,6 +118,48 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         |> render
       }
 
+      ["recipes-add-to-meal"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
+        let parsed_parameters = {
+          use meal_id <- result.try(list.key_find(formdata.values, "meal_id"))
+          use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
+          use recipe_id <- result.try(list.key_find(
+            formdata.values,
+            "recipe_id",
+          ))
+          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(#(parsed_meal_id, parsed_recipe_id))
+        }
+
+        case parsed_parameters {
+          Ok(#(valid_meal_id, valid_recipe_id)) -> {
+            let recipe = recipe_adapter.get(ctx.connection, valid_recipe_id)
+            let meal = meal_adapter.get(ctx.connection, valid_meal_id)
+
+            case meal, recipe {
+              Ok(valid_meal), Ok(valid_recipe) -> {
+                let updated_recipe = meals.add_to_meal(valid_meal, valid_recipe)
+                recipe_adapter.bulk_insert([updated_recipe], ctx.connection)
+                [meal_renderer.view(#(valid_meal, updated_recipe))]
+                |> layout
+                |> render
+                |> wisp.set_header(
+                  "HX-location",
+                  "{\"path\": \"meals-list\", \"target\": \"#main\"}",
+                )
+              }
+              Error(message), _ -> error_message(message)
+              _, Error(message) -> error_message(message)
+            }
+          }
+          Error(_) ->
+            error_message(
+              "l'identifiant du repas ou de la recette est invalide",
+            )
+        }
+      }
+
       ["recipes-ingredients"] -> {
         use req <- web.middleware(req, ctx)
         use formdata <- wisp.require_form(req)
@@ -151,7 +194,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
       ["recipes-list"] -> {
         let all_recipes = recipe_adapter.get_all(ctx.connection)
-        recipes.page(all_recipes)
+        recipes.page(all_recipes, option.None)
         |> render
       }
 
@@ -165,14 +208,18 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             formdata.values,
             "recipe_id",
           ))
-          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
-          Ok(#(parsed_meal_id, parsed_recipe_id))
+          use valid_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(#(parsed_meal_id, valid_recipe_id))
         }
 
         case parsed_parameters {
           Ok(#(valid_meal_id, parsed_recipe_id)) -> {
             let meals =
-              meals.replace_recipe(ctx, valid_meal_id, parsed_recipe_id)
+              meals.replace__with_random_recipe(
+                ctx,
+                valid_meal_id,
+                parsed_recipe_id,
+              )
 
             case meals {
               Ok([generated_meals]) ->
@@ -189,6 +236,70 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
               "l'identifiant du repas ou de la recette est invalide",
             )
         }
+      }
+
+      ["recipes-search"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
+
+        let parameters = {
+          use searched_string <- result.try(list.key_find(
+            formdata.values,
+            "searched_string",
+          ))
+          use meal_id <- result.try(list.key_find(formdata.values, "meal_id"))
+          Ok(#(searched_string, meal_id))
+        }
+
+        case parameters {
+          Ok(#("", maybe_meal_id)) -> {
+            // TODO factorize
+            let meal_to_change = case maybe_meal_id {
+              "" -> option.None
+              _ ->
+                maybe_meal_id
+                |> uuid.from_string
+                |> option.from_result
+            }
+            let all_recipes = recipe_adapter.get_all(ctx.connection)
+            recipes.page(all_recipes, meal_to_change)
+            |> render
+          }
+          Ok(#(non_empty_string, maybe_meal_id)) -> {
+            // TODO factorize
+            let meal_to_change = case maybe_meal_id {
+              "" -> option.None
+              _ ->
+                maybe_meal_id
+                |> uuid.from_string
+                |> option.from_result
+            }
+            let filtered_recipes =
+              recipe_adapter.find_by_content(ctx.connection, non_empty_string)
+
+            recipes.page(filtered_recipes, meal_to_change)
+            |> render
+          }
+          Error(_) -> error_message("Critère de recherche invalide")
+        }
+      }
+
+      // displays the list of recipes in order to select one to be added to the given meal
+      ["recipes-select"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
+
+        let id_of_meal_to_change = {
+          use meal_id <- result.try(list.key_find(formdata.values, "meal_id"))
+          use parsed_meal_id <- result.try({ uuid.from_string(meal_id) })
+          Ok(parsed_meal_id)
+        }
+        let meal_to_change = option.from_result(id_of_meal_to_change)
+
+        let all_recipes = recipe_adapter.get_all(ctx.connection)
+
+        recipes.page(all_recipes, meal_to_change)
+        |> render
       }
 
       ["recipes-steps"] -> {

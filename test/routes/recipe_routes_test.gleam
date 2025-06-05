@@ -4,6 +4,7 @@ import gleam/list
 import gleam/option.{Some}
 import gleam/result
 import gleeunit/should
+import simplifile
 import youid/uuid
 
 const meal_uuid: String = "1ff0d722-8b82-46fa-a418-a3881e0cce46"
@@ -15,6 +16,9 @@ fn oven_baked_bar() {
   let assert Ok(recipe_id) = uuid.from_string(recipe_uuid)
 
   recipe.Recipe(
+    cooking_duration: option.None,
+    preparation_duration: option.None,
+    total_duration: option.None,
     image: "https://assets.afcdn.com/image1.jpg",
     ingredients: ["1 oignon", "1 citron"],
     meal_id: Some(meal_id),
@@ -29,6 +33,9 @@ fn flan() {
   let assert Ok(recipe_id) = uuid.from_string(recipe_uuid)
 
   recipe.Recipe(
+    cooking_duration: option.None,
+    preparation_duration: option.None,
+    total_duration: option.None,
     image: "https://assets.afcdn.com/image2.jpg",
     ingredients: ["1 flan", "1 pâté de campagne"],
     meal_id: Some(uuid),
@@ -97,7 +104,22 @@ pub fn from_xml_decodes_cookbook_with_multiple_recipes_test() {
   "
   |> recipe_routes.from_xml()
   |> replace_uuids
-  |> should.equal(Ok([oven_baked_bar(), flan()]))
+  |> should.equal(
+    Ok([
+      recipe.Recipe(
+        ..oven_baked_bar(),
+        preparation_duration: Some(15),
+        cooking_duration: Some(25),
+        total_duration: Some(40),
+      ),
+      recipe.Recipe(
+        ..flan(),
+        preparation_duration: Some(15),
+        cooking_duration: Some(25),
+        total_duration: Some(40),
+      ),
+    ]),
+  )
 }
 
 pub fn from_xml_decodes_recipes_with_empty_ingredients_test() {
@@ -105,9 +127,6 @@ pub fn from_xml_decodes_recipes_with_empty_ingredients_test() {
    <cookbook>
     <recipe>
         <title>Bar au four</title>
-        <preptime>15 min</preptime>
-        <cooktime>25 min</cooktime>
-        <totaltime>40 min</totaltime>
         <quantity>2</quantity>
         <ingredient>
             <li>1 oignon</li>
@@ -124,9 +143,6 @@ pub fn from_xml_decodes_recipes_with_empty_ingredients_test() {
     </recipe>
     <recipe>
         <title>Flan au pâté</title>
-        <preptime>15 min</preptime>
-        <cooktime>25 min</cooktime>
-        <totaltime>40 min</totaltime>
         <quantity>2</quantity>
         <ingredient>
             <li>1 flan</li>
@@ -151,9 +167,6 @@ pub fn from_xml_decodes_recipes_with_empty_steps_test() {
    <cookbook>
     <recipe>
         <title>Bar au four</title>
-        <preptime>15 min</preptime>
-        <cooktime>25 min</cooktime>
-        <totaltime>40 min</totaltime>
         <quantity>2</quantity>
         <ingredient>
             <li>1 oignon</li>
@@ -170,9 +183,6 @@ pub fn from_xml_decodes_recipes_with_empty_steps_test() {
     </recipe>
     <recipe>
         <title>Flan au pâté</title>
-        <preptime>15 min</preptime>
-        <cooktime>25 min</cooktime>
-        <totaltime>40 min</totaltime>
         <quantity>2</quantity>
         <ingredient>
             <li>1 flan</li>
@@ -229,7 +239,23 @@ pub fn from_xml_decodes_recipes_without_steps_test() {
   "
   |> recipe_routes.from_xml()
   |> replace_uuids
-  |> should.equal(Ok([recipe.Recipe(..oven_baked_bar(), steps: ""), flan()]))
+  |> should.equal(
+    Ok([
+      recipe.Recipe(
+        ..oven_baked_bar(),
+        steps: "",
+        preparation_duration: Some(15),
+        cooking_duration: Some(25),
+        total_duration: Some(40),
+      ),
+      recipe.Recipe(
+        ..flan(),
+        preparation_duration: Some(15),
+        cooking_duration: Some(25),
+        total_duration: Some(40),
+      ),
+    ]),
+  )
 }
 
 pub fn from_xml_decodes_cookbook_containing_one_recipe_only_test() {
@@ -299,6 +325,172 @@ pub fn from_xml_decodes_recipe_with_only_one_step_test() {
   |> recipe_routes.from_xml()
   |> replace_uuids
   |> should.equal(Ok([recipe.Recipe(..oven_baked_bar(), steps: "Etape 1")]))
+}
+
+pub fn from_xml_decodes_recipe_with_cooking_duration_in_min_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Bar au four</title>
+            <cooktime>15 min</cooktime>
+            <ingredient>
+                <li>1 oignon</li>
+                <li>1 citron</li>
+            </ingredient>
+            <recipetext>
+                <li>Etape 1</li>
+                <li>Etape 2</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://assets.afcdn.com/image1.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe_routes.from_xml()
+  |> replace_uuids
+  |> should.equal(
+    Ok([recipe.Recipe(..oven_baked_bar(), cooking_duration: Some(15))]),
+  )
+}
+
+pub fn from_xml_decodes_recipe_with_cooking_duration_in_mn_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Bar au four</title>
+            <cooktime>30 mn</cooktime>
+            <ingredient>
+                <li>1 oignon</li>
+                <li>1 citron</li>
+            </ingredient>
+            <recipetext>
+                <li>Etape 1</li>
+                <li>Etape 2</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://assets.afcdn.com/image1.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe_routes.from_xml()
+  |> replace_uuids
+  |> should.equal(
+    Ok([recipe.Recipe(..oven_baked_bar(), cooking_duration: Some(30))]),
+  )
+}
+
+pub fn from_xml_decodes_recipe_with_cooking_duration_in_hour_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Bar au four</title>
+            <cooktime>1 h</cooktime>
+            <ingredient>
+                <li>1 oignon</li>
+                <li>1 citron</li>
+            </ingredient>
+            <recipetext>
+                <li>Etape 1</li>
+                <li>Etape 2</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://assets.afcdn.com/image1.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe_routes.from_xml()
+  |> replace_uuids
+  |> should.equal(
+    Ok([recipe.Recipe(..oven_baked_bar(), cooking_duration: Some(60))]),
+  )
+}
+
+pub fn from_xml_decodes_recipe_with_cooking_duration_in_hour_and_minutes_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Bar au four</title>
+            <cooktime>1h30</cooktime>
+            <ingredient>
+                <li>1 oignon</li>
+                <li>1 citron</li>
+            </ingredient>
+            <recipetext>
+                <li>Etape 1</li>
+                <li>Etape 2</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://assets.afcdn.com/image1.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe_routes.from_xml()
+  |> replace_uuids
+  |> should.equal(
+    Ok([recipe.Recipe(..oven_baked_bar(), cooking_duration: Some(90))]),
+  )
+}
+
+pub fn from_xml_decodes_recipe_with_preparation_duration_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Bar au four</title>
+            <preptime>10 min</preptime>
+            <ingredient>
+                <li>1 oignon</li>
+                <li>1 citron</li>
+            </ingredient>
+            <recipetext>
+                <li>Etape 1</li>
+                <li>Etape 2</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://assets.afcdn.com/image1.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe_routes.from_xml()
+  |> replace_uuids
+  |> should.equal(
+    Ok([recipe.Recipe(..oven_baked_bar(), preparation_duration: Some(10))]),
+  )
+}
+
+pub fn from_xml_decodes_recipe_with_total_duration_test() {
+  "<?xml version='1.0' encoding='UTF-8'?>
+    <cookbook>
+        <recipe>
+            <title>Bar au four</title>
+            <totaltime>25 min</totaltime>
+            <ingredient>
+                <li>1 oignon</li>
+                <li>1 citron</li>
+            </ingredient>
+            <recipetext>
+                <li>Etape 1</li>
+                <li>Etape 2</li>
+            </recipetext>
+            <url>https://lacerisesurlemaillot.fr/blanquette-cabillaud/</url>
+            <imageurl>https://assets.afcdn.com/image1.jpg</imageurl>
+        </recipe>
+    </cookbook>
+  "
+  |> recipe_routes.from_xml()
+  |> replace_uuids
+  |> should.equal(
+    Ok([recipe.Recipe(..oven_baked_bar(), total_duration: Some(25))]),
+  )
+}
+
+pub fn from_xml_decodes_all_imported_recipes_test() {
+  let filepath = "./test/data/mycookbookrecipes.xml"
+  let assert Ok(content) = simplifile.read(from: filepath)
+  content
+  |> recipe_routes.from_xml()
+  |> result.unwrap([])
+  |> list.length
+  |> should.equal(395)
 }
 
 // replace the random meal and recipe IDs with known ones so we can easily compare actual recipes with expected results

@@ -1,13 +1,16 @@
+import app/models/recipe.{type Recipe, Recipe}
 import gleam/dynamic/decode
+import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option.{None}
+import gleam/regexp
+import gleam/result
 import gleam/string
 import gleam/string_tree
+import wisp
 import xmljson
 import youid/uuid
-
-import app/models/recipe.{type Recipe, Recipe}
 
 pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
   let assert Ok(source_json) = xmljson.to_json(source)
@@ -31,7 +34,78 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
     ])
   }
 
+  let duration_decoder: decode.Decoder(option.Option(Int)) = {
+    use duration_string <- decode.then(nested_string_decoder)
+    let options = regexp.Options(case_insensitive: True, multi_line: False)
+    let assert Ok(re) =
+      regexp.compile(
+        "(\\d+)\\s?(h)\\s?(\\d+)?|(\\d+)\\s?(minutes|min|mn|m)?",
+        with: options,
+      )
+    let duration_and_unit =
+      regexp.split(with: re, content: duration_string)
+      |> list.map(string.lowercase)
+      |> list.map(string.trim)
+
+    case duration_and_unit {
+      ["", "", "", "", integer, "min", ""]
+      | ["", "", "", "", integer, "minutes", ""]
+      | ["", "", "", "", integer, "mn", ""]
+      | ["", "", "", "", integer, "m", ""]
+      | ["", "", "", "", integer, "", "'"]
+      | ["", "", "", "", integer, "", ""] -> {
+        let duration_in_minutes = int.parse(integer) |> option.from_result
+        decode.success(duration_in_minutes)
+      }
+      ["", integer, "h", "", "", "", ""] -> {
+        let duration_in_minutes =
+          int.parse(integer)
+          |> result.map(fn(value) { value * 60 })
+          |> option.from_result
+        decode.success(duration_in_minutes)
+      }
+      ["", hours, "h", minutes, "", "", ""]
+      | ["", hours, "h", minutes, "", "", "min"]
+      | ["", hours, "h", minutes, "", "", "m"] -> {
+        let assert Ok(min) = minutes |> int.parse
+
+        let duration_in_minutes =
+          hours
+          |> int.parse
+          |> result.map(fn(value) { value * 60 + min })
+          |> option.from_result
+        decode.success(duration_in_minutes)
+      }
+      [""] -> {
+        decode.success(option.None)
+      }
+      a -> {
+        echo a
+        wisp.log_error(
+          "Cannot import recipe with duration: " <> duration_string,
+        )
+        decode.success(option.None)
+      }
+    }
+  }
+
   let recipe_decoder: decode.Decoder(Recipe) = {
+    use cooking_duration <- decode.optional_field(
+      "cooktime",
+      option.None,
+      duration_decoder,
+    )
+    use preparation_duration <- decode.optional_field(
+      "preptime",
+      option.None,
+      duration_decoder,
+    )
+    use total_duration <- decode.optional_field(
+      "totaltime",
+      option.None,
+      duration_decoder,
+    )
+
     use image <- decode.field("imageurl", nested_string_decoder)
 
     use ingredients <- decode.optional_field(
@@ -50,13 +124,16 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
 
     use title <- decode.field("title", nested_string_decoder)
     decode.success(Recipe(
+      cooking_duration:,
       image:,
       ingredients: actual_ingredients,
       meal_id: None,
+      preparation_duration:,
       steps: steps
         |> list.filter(fn(x) { x != "" })
         |> string.join(with: "\n"),
       title:,
+      total_duration:,
       uuid: uuid.v4(),
     ))
   }

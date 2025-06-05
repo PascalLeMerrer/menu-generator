@@ -20,11 +20,14 @@ pub const schema = "-- recipes that could be selected for new menus
   CREATE TABLE IF NOT EXISTS "
   <> table_name
   <> " (
+    cooking_duration INTEGER, -- in minutes
     image TEXT NOT NULL,
     ingredients TEXT NOT NULL,
     meal_id TEXT,
+    preparation_duration INTEGER, -- in minutes
     steps TEXT NOT NULL,
     title TEXT NOT NULL,
+    total_duration INTEGER, -- in minutes
     uuid TEXT NOT NULL,
     CONSTRAINT fk_meal
       FOREIGN KEY(meal_id)
@@ -37,31 +40,43 @@ pub fn bulk_insert(
   db_connection: sqlight.Connection,
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   recipes
-  |> list.map(fn(recipe) {
+  |> list.map(fn(recipe_to_insert) {
     [
-      insert.string(recipe.image),
-      insert.string(recipe.ingredients |> join_lines),
+      insert_maybe_int(recipe_to_insert.cooking_duration),
+      insert.string(recipe_to_insert.image),
+      insert.string(recipe_to_insert.ingredients |> join_lines),
       // imported recipes are not linked to any meal
-      case recipe.meal_id {
+      case recipe_to_insert.meal_id {
         Some(id) -> insert.string(id |> uuid.to_string)
         None -> insert.null()
       },
-      insert.string(recipe.steps),
-      insert.string(recipe.title),
-      insert.string(recipe.uuid |> uuid.to_string),
+      insert_maybe_int(recipe_to_insert.preparation_duration),
+      insert.string(recipe_to_insert.steps),
+      insert.string(recipe_to_insert.title),
+      insert_maybe_int(recipe_to_insert.total_duration),
+      insert.string(recipe_to_insert.uuid |> uuid.to_string),
     ]
     |> insert.row
   })
   |> insert.from_values(table_name: table_name, columns: [
-    "image", "ingredients", "meal_id", "steps", "title", "uuid",
+    "cooking_duration", "image", "ingredients", "meal_id",
+    "preparation_duration", "steps", "title", "total_duration", "uuid",
   ])
   |> insert.returning([
-    "image", "ingredients", "meal_id", "steps", "title", "uuid",
+    "cooking_duration", "image", "ingredients", "meal_id",
+    "preparation_duration", "steps", "title", "total_duration", "uuid",
   ])
   |> insert.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
   |> db.display_db_error
   |> decode_recipes
+}
+
+fn insert_maybe_int(value: option.Option(Int)) {
+  case value {
+    Some(integer) -> insert.int(integer)
+    None -> insert.null()
+  }
 }
 
 fn join_lines(lines: List(String)) -> String {
@@ -73,14 +88,7 @@ pub fn get_all(
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("image"),
-    select.col("ingredients"),
-    select.col("meal_id"),
-    select.col("steps"),
-    select.col("title"),
-    select.col("uuid"),
-  ])
+  |> select.selects(all_columns())
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
   |> db.display_db_error
@@ -94,14 +102,7 @@ pub fn find_by_meal_id(
   let uuid = meal_id |> uuid.to_string
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("image"),
-    select.col("ingredients"),
-    select.col("meal_id"),
-    select.col("steps"),
-    select.col("title"),
-    select.col("uuid"),
-  ])
+  |> select.selects(all_columns())
   |> select.where(where.col("meal_id") |> where.eq(where.string(uuid)))
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
@@ -128,14 +129,7 @@ pub fn find_by_id(
   let uuid = recipe_id |> uuid.to_string
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("image"),
-    select.col("ingredients"),
-    select.col("meal_id"),
-    select.col("steps"),
-    select.col("title"),
-    select.col("uuid"),
-  ])
+  |> select.selects(all_columns())
   |> select.where(where.col("uuid") |> where.eq(where.string(uuid)))
   |> select.to_query
   |> sqlite.run_read_query(decode.dynamic, db_connection)
@@ -148,14 +142,7 @@ pub fn find_by_content(db_connection: sqlight.Connection, content: String) {
   let query = {
     select.new()
     |> select.from_table(table_name)
-    |> select.selects([
-      select.col("image"),
-      select.col("ingredients"),
-      select.col("meal_id"),
-      select.col("steps"),
-      select.col("title"),
-      select.col("uuid"),
-    ])
+    |> select.selects(all_columns())
     |> select.where(where.col("ingredients") |> where.like(filter))
     |> select.or_where(where.col("title") |> where.like(filter))
     |> select.to_query
@@ -180,14 +167,7 @@ pub fn get_random(
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
-  |> select.selects([
-    select.col("image"),
-    select.col("ingredients"),
-    select.col("meal_id"),
-    select.col("steps"),
-    select.col("title"),
-    select.col("uuid"),
-  ])
+  |> select.selects(all_columns())
   |> select.order_by(by: "RANDOM()", direction: select.Asc)
   |> select.limit(count)
   |> select.to_query
@@ -220,6 +200,21 @@ pub fn delete_unlinked(
   |> delete_statement.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
   |> db.display_db_error
+}
+
+//TODO see if select.col("*") is ok
+fn all_columns() {
+  [
+    select.col("cooking_duration"),
+    select.col("image"),
+    select.col("ingredients"),
+    select.col("meal_id"),
+    select.col("preparation_duration"),
+    select.col("steps"),
+    select.col("title"),
+    select.col("total_duration"),
+    select.col("uuid"),
+  ]
 }
 
 fn decode_recipes(

@@ -12,22 +12,34 @@ const uuid1: String = "1ff0d72c-8b82-46fa-a418-a3881e0cce46"
 
 const uuid2: String = "2ff0d722-8b82-46fa-a418-a3881e0cce46"
 
+const cooking_duration = 10
+
+const preparation_duration = 20
+
+const total_duration = 30
+
 pub fn decodes_recipe_with_one_step_and_one_ingredient_test() {
   let assert Ok(meal_id) = uuid.from_string(uuid1)
   let assert Ok(recipe_id) = uuid.from_string(uuid2)
 
   dynamic.from(#(
+    cooking_duration,
     image,
     "a unique ingredient",
     uuid1,
+    preparation_duration,
     "a unique step",
     title,
+    total_duration,
     uuid2,
   ))
   |> recipe.decode()
   |> should.equal(
     Ok(recipe.Recipe(
       title: title,
+      cooking_duration: option.Some(10),
+      preparation_duration: option.Some(20),
+      total_duration: option.Some(30),
       image: image,
       meal_id: Some(meal_id),
       steps: "a unique step",
@@ -41,17 +53,23 @@ pub fn decodes_recipe_with_several_steps_and_ingredients_test() {
   let assert Ok(meal_id) = uuid.from_string(uuid1)
   let assert Ok(recipe_id) = uuid.from_string(uuid2)
   dynamic.from(#(
+    cooking_duration,
     image,
     "a first ingredient@a second ingredient",
     uuid1,
+    preparation_duration,
     "A first step.\nA second step",
     title,
+    total_duration,
     uuid2,
   ))
   |> recipe.decode()
   |> should.equal(
     Ok(recipe.Recipe(
       title: title,
+      cooking_duration: option.Some(10),
+      preparation_duration: option.Some(20),
+      total_duration: option.Some(30),
       image: image,
       meal_id: Some(meal_id),
       steps: "A first step.\nA second step",
@@ -72,17 +90,23 @@ pub fn decodes_real_recipe_test() {
   let assert Ok(real_meal_id) = uuid.from_string(uuid1)
   let assert Ok(real_recipe_id) = uuid.from_string(uuid2)
   dynamic.from(#(
+    cooking_duration,
     real_image,
     real_ingredients,
     uuid1,
+    preparation_duration,
     real_steps,
     real_title,
+    total_duration,
     uuid2,
   ))
   |> recipe.decode()
   |> should.equal(
     Ok(recipe.Recipe(
       title: real_title,
+      cooking_duration: option.Some(10),
+      preparation_duration: option.Some(20),
+      total_duration: option.Some(30),
       image: real_image,
       meal_id: Some(real_meal_id),
       steps: real_steps,

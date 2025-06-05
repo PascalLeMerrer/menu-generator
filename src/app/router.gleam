@@ -252,28 +252,14 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         }
 
         case parameters {
-          Ok(#("", maybe_meal_id)) -> {
-            // TODO factorize
-            let meal_to_change = case maybe_meal_id {
-              "" -> option.None
-              _ ->
-                maybe_meal_id
-                |> uuid.from_string
-                |> option.from_result
-            }
+          Ok(#("", meal_id_or_empty)) -> {
+            let meal_to_change = some_meal_id(meal_id_or_empty)
             let all_recipes = recipe_adapter.get_all(ctx.connection)
             recipes.page(all_recipes, meal_to_change)
             |> render
           }
           Ok(#(non_empty_string, maybe_meal_id)) -> {
-            // TODO factorize
-            let meal_to_change = case maybe_meal_id {
-              "" -> option.None
-              _ ->
-                maybe_meal_id
-                |> uuid.from_string
-                |> option.from_result
-            }
+            let meal_to_change = some_meal_id(maybe_meal_id)
             let filtered_recipes =
               recipe_adapter.find_by_content(ctx.connection, non_empty_string)
 
@@ -412,4 +398,14 @@ fn render(html_nodes: element.Element(a)) -> Response {
   html_nodes
   |> element.to_document_string_builder
   |> wisp.html_response(200)
+}
+
+fn some_meal_id(maybe_meal_id: String) -> option.Option(uuid.Uuid) {
+  case maybe_meal_id {
+    "" -> option.None
+    _ ->
+      maybe_meal_id
+      |> uuid.from_string
+      |> option.from_result
+  }
 }

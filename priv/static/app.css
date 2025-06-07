@@ -83,19 +83,29 @@ nav>div:hover {
   gap: 10px;
 }
 
-.generated_menu .ingredients {
+.generated_menu .metadata {
   grid-column: 1/5;
   grid-row: 2;
 }
 
-.generated_menu .steps {
+.metadata .durations {
+  display: grid;
+  grid-template-columns: 1fr 1fr 100px;
+}
+
+.generated_menu .ingredients {
   grid-column: 1/5;
   grid-row: 3;
 }
 
+.generated_menu .steps {
+  grid-column: 1/5;
+  grid-row: 4;
+}
+
 .recipe {
   display: grid;
-  grid-template-columns: 100px 300px 100px;
+  grid-template-columns: 100px auto 100px;
   margin: 10px;
   border: 1px solid #444444;
 }
@@ -122,15 +132,20 @@ nav>div:hover {
   cursor: pointer;
 }
 
-.recipe .ingredients {
+.recipe .metadata {
   grid-column: 1/4;
   grid-row: 2;
+}
+
+.recipe .ingredients {
+  grid-column: 1/4;
+  grid-row: 3;
 }
 
 
 .recipe .steps {
   grid-column: 1/4;
-  grid-row: 3;
+  grid-row: 4;
 }
 
 .generated_menu>*,
@@ -151,6 +166,7 @@ nav>div:hover {
 
 .close-button {
   cursor: pointer;
+  justify-self: end;
 }
 
 #search-form {

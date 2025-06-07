@@ -23,6 +23,7 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
     use str <- decode.optional_field("$", "", decode.string)
     decode.success(str)
   }
+
   let string_or_list_of_strings_decoder: decode.Decoder(List(String)) = {
     decode.one_of(decode.at(["li"], decode.list(nested_string_decoder)), or: [
       decode.at(
@@ -35,6 +36,7 @@ pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
   }
 
   let duration_decoder: decode.Decoder(option.Option(Int)) = {
+    // decode.then builds a decoder based on the one it is given as an argument
     use duration_string <- decode.then(nested_string_decoder)
     let options = regexp.Options(case_insensitive: True, multi_line: False)
     let assert Ok(re) =

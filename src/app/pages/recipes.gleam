@@ -1,9 +1,11 @@
 import app/helpers/decoding
 import app/models/recipe
 import gleam/dynamic/decode
+import gleam/int
 import gleam/json
 import gleam/list
 import gleam/option
+import gleam/result
 import gleam/string
 import hx
 import lustre/attribute.{class, height, src, width}
@@ -105,6 +107,18 @@ fn view_recipe(
             span(
               [
                 class("action"),
+                hx.post("recipes-metadata"),
+                hx.vals(
+                  json.object([#("recipe_id", recipe_id |> json.string)]),
+                  False,
+                ),
+                hx.target(hx.CssSelector("next .metadata")),
+              ],
+              [text("Détails")],
+            ),
+            span(
+              [
+                class("action"),
                 hx.post("recipes-ingredients"),
                 hx.vals(
                   json.object([#("recipe_id", recipe_id |> json.string)]),
@@ -127,6 +141,7 @@ fn view_recipe(
               [text("Étapes")],
             ),
           ]),
+          div([class("metadata")], []),
           div([class("ingredients")], []),
           div([class("steps")], []),
         ]),
@@ -160,4 +175,36 @@ pub fn view_steps(recipe: recipe.Recipe) -> Element(t) {
       text("masquer"),
     ]),
   ])
+}
+
+pub fn view_metadata(recipe_to_display: recipe.Recipe) -> Element(t) {
+  let preparation_duration =
+    recipe_to_display.preparation_duration |> view_duration("Préparation")
+  let cooking_duration =
+    recipe_to_display.cooking_duration |> view_duration("Cuisson")
+  let total_duration =
+    recipe_to_display.total_duration |> view_duration("Total")
+
+  div([hx.ext(["remove"]), class("durations")], [
+    span([], [text(preparation_duration)]),
+    span([], [text(total_duration)]),
+    span([attribute.data("remove", "true"), class("close-button")], [
+      text("masquer"),
+    ]),
+    span([], [text(cooking_duration)]),
+  ])
+}
+
+fn view_duration(value: option.Option(Int), label: String) {
+  case value {
+    option.Some(minutes) if minutes < 60 ->
+      label <> " : " <> minutes |> int.to_string <> " minutes"
+    option.Some(minutes) -> {
+      let remaining_minutes =
+        minutes % 60 |> int.to_string |> string.pad_start(to: 2, with: "0")
+      let hours = int.divide(minutes, 60) |> result.unwrap(0) |> int.to_string
+      label <> " : " <> hours <> "h" <> remaining_minutes
+    }
+    option.None -> ""
+  }
 }

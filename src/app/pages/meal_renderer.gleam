@@ -80,6 +80,18 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
       span(
         [
           class("action"),
+          hx.post("recipes-metadata"),
+          hx.vals(
+            json.object([#("recipe_id", recipe_id |> json.string)]),
+            False,
+          ),
+          hx.target(hx.CssSelector("next .metadata")),
+        ],
+        [text("Détails")],
+      ),
+      span(
+        [
+          class("action"),
           hx.post("recipes-ingredients"),
           hx.vals(
             json.object([#("recipe_id", recipe_id |> json.string)]),
@@ -102,6 +114,7 @@ pub fn view(meal_and_recipe: #(meal.Meal, recipe.Recipe)) -> Element(t) {
         [text("Étapes")],
       ),
     ]),
+    div([class("metadata")], []),
     div([class("ingredients")], []),
     div([class("steps")], []),
   ])

@@ -198,6 +198,38 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         |> render
       }
 
+      ["recipes-metadata"] -> {
+        use req <- web.middleware(req, ctx)
+        use formdata <- wisp.require_form(req)
+
+        let parsed_recipe_id = {
+          use recipe_id <- result.try(list.key_find(
+            formdata.values,
+            "recipe_id",
+          ))
+          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(parsed_recipe_id)
+        }
+
+        case parsed_recipe_id {
+          Ok(valid_recipe_id) -> {
+            let recipe =
+              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
+
+            case recipe {
+              [Ok(valid_recipe)] ->
+                [recipes.view_metadata(valid_recipe)]
+                |> layout
+                |> render
+              [Error(_)] -> error_message("métadonnées non trouvées 1")
+              [] -> error_message("métadonnées non trouvées 2")
+              [_, _, ..] -> error_message("métadonnées non trouvées 3")
+            }
+          }
+          Error(_) -> error_message("l'identifiant de la recette est invalide")
+        }
+      }
+
       ["recipes-replace"] -> {
         use req <- web.middleware(req, ctx)
         use formdata <- wisp.require_form(req)

@@ -36,6 +36,12 @@ pub const schema = "-- recipes that could be selected for new menus
       ON DELETE CASCADE
     );"
 
+const columns = [
+  "cooking_duration", "image", "ingredients", "meal_id", "preparation_duration",
+  "quantity", "steps", "title", "total_duration", "uuid",
+]
+
+// TODO move db_connection to first position
 pub fn bulk_insert(
   recipes: List(recipe.Recipe),
   db_connection: sqlight.Connection,
@@ -60,16 +66,8 @@ pub fn bulk_insert(
     ]
     |> insert.row
   })
-  |> insert.from_values(table_name: table_name, columns: [
-    "cooking_duration", "image", "ingredients", "meal_id",
-    "preparation_duration", "quantity", "steps", "title", "total_duration",
-    "uuid",
-  ])
-  |> insert.returning([
-    "cooking_duration", "image", "ingredients", "meal_id",
-    "preparation_duration", "quantity", "steps", "title", "total_duration",
-    "uuid",
-  ])
+  |> insert.from_values(table_name: table_name, columns: columns)
+  |> insert.returning(columns)
   |> insert.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
   |> db.display_db_error
@@ -180,6 +178,7 @@ pub fn get_random(
   |> decode_recipes
 }
 
+// TODO move db_connection to first position
 pub fn delete(
   uuid: uuid.Uuid,
   db_connection: sqlight.Connection,
@@ -206,20 +205,8 @@ pub fn delete_unlinked(
   |> db.display_db_error
 }
 
-//TODO see if select.col("*") is ok
 fn all_columns() {
-  [
-    select.col("cooking_duration"),
-    select.col("image"),
-    select.col("ingredients"),
-    select.col("meal_id"),
-    select.col("preparation_duration"),
-    select.col("quantity"),
-    select.col("steps"),
-    select.col("title"),
-    select.col("total_duration"),
-    select.col("uuid"),
-  ]
+  [select.col("*")]
 }
 
 fn decode_recipes(

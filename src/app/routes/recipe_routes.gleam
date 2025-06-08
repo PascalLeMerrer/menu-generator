@@ -14,96 +14,97 @@ import youid/uuid
 
 pub fn from_xml(source: String) -> Result(List(Recipe), json.DecodeError) {
   let assert Ok(source_json) = xmljson.to_json(source)
+
   let json_string =
     source_json
     |> json.to_string_tree
     |> string_tree.to_string
 
-  // TODO extract decoders
-  let string_or_list_of_strings_decoder: decode.Decoder(List(String)) = {
-    decode.one_of(decode.at(["li"], decode.list(nested_string_decoder())), or: [
+  json.parse(from: json_string, using: cookbook_decoder())
+}
+
+fn cookbook_decoder() -> decode.Decoder(List(Recipe)) {
+  decode.one_of(
+    decode.at(["cookbook", "recipe"], decode.list(recipe_decoder())),
+    or: [
       decode.at(
-        ["li"],
-        decode.then(nested_string_decoder(), fn(decoded_string) {
-          decode.success([decoded_string])
-        }),
+        ["cookbook", "recipe"],
+        decode.then(recipe_decoder(), fn(recipe) { decode.success([recipe]) }),
       ),
-    ])
-  }
+    ],
+  )
+}
 
-  let recipe_decoder: decode.Decoder(Recipe) = {
-    use cooking_duration <- decode.optional_field(
-      "cooktime",
-      option.None,
-      duration_decoder(),
-    )
-    use preparation_duration <- decode.optional_field(
-      "preptime",
-      option.None,
-      duration_decoder(),
-    )
-    use total_duration <- decode.optional_field(
-      "totaltime",
-      option.None,
-      duration_decoder(),
-    )
+fn recipe_decoder() -> decode.Decoder(Recipe) {
+  use cooking_duration <- decode.optional_field(
+    "cooktime",
+    option.None,
+    duration_decoder(),
+  )
+  use preparation_duration <- decode.optional_field(
+    "preptime",
+    option.None,
+    duration_decoder(),
+  )
+  use total_duration <- decode.optional_field(
+    "totaltime",
+    option.None,
+    duration_decoder(),
+  )
 
-    use quantity <- decode.optional_field(
-      "quantity",
-      option.None,
-      optional_int_decoder(),
-    )
+  use quantity <- decode.optional_field(
+    "quantity",
+    option.None,
+    optional_int_decoder(),
+  )
 
-    use image <- decode.field("imageurl", nested_string_decoder())
+  use image <- decode.field("imageurl", nested_string_decoder())
 
-    use ingredients <- decode.optional_field(
-      "ingredient",
-      [],
-      string_or_list_of_strings_decoder,
-    )
-    let actual_ingredients =
-      ingredients
+  use ingredients <- decode.optional_field(
+    "ingredient",
+    [],
+    string_or_list_of_strings_decoder(),
+  )
+  let actual_ingredients =
+    ingredients
+    |> list.filter(fn(x) { x != "" })
+  use steps <- decode.optional_field(
+    "recipetext",
+    [],
+    string_or_list_of_strings_decoder(),
+  )
+
+  use title <- decode.field("title", nested_string_decoder())
+  decode.success(Recipe(
+    cooking_duration:,
+    image:,
+    ingredients: actual_ingredients,
+    meal_id: None,
+    preparation_duration:,
+    quantity:,
+    steps: steps
       |> list.filter(fn(x) { x != "" })
-    use steps <- decode.optional_field(
-      "recipetext",
-      [],
-      string_or_list_of_strings_decoder,
-    )
-
-    use title <- decode.field("title", nested_string_decoder())
-    decode.success(Recipe(
-      cooking_duration:,
-      image:,
-      ingredients: actual_ingredients,
-      meal_id: None,
-      preparation_duration:,
-      quantity:,
-      steps: steps
-        |> list.filter(fn(x) { x != "" })
-        |> string.join(with: "\n"),
-      title:,
-      total_duration:,
-      uuid: uuid.v4(),
-    ))
-  }
-
-  let cookbook_decoder =
-    decode.one_of(
-      decode.at(["cookbook", "recipe"], decode.list(recipe_decoder)),
-      or: [
-        decode.at(
-          ["cookbook", "recipe"],
-          decode.then(recipe_decoder, fn(recipe) { decode.success([recipe]) }),
-        ),
-      ],
-    )
-
-  json.parse(from: json_string, using: cookbook_decoder)
+      |> string.join(with: "\n"),
+    title:,
+    total_duration:,
+    uuid: uuid.v4(),
+  ))
 }
 
 fn nested_string_decoder() -> decode.Decoder(String) {
   use str <- decode.optional_field("$", "", decode.string)
   decode.success(str)
+}
+
+fn string_or_list_of_strings_decoder() -> decode.Decoder(List(String)) {
+  decode.one_of(decode.at(["li"], decode.list(nested_string_decoder())), or: [
+    decode.at(
+      ["li"],
+      decode.then(nested_string_decoder(), fn(decoded_string) {
+        decode.success([decoded_string])
+      }),
+    ),
+  ])
 }
 
 fn optional_int_decoder() -> decode.Decoder(option.Option(Int)) {

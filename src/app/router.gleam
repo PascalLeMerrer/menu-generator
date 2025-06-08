@@ -107,8 +107,19 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           instant.now()
           |> instant.as_local_datetime
           |> datetime.subtract(duration.days(days_in_week))
-        let all_meals = meal_adapter.get_after(ctx.connection, one_week_ago)
-        meal_list_page.page(all_meals)
+        let recent_meals = meal_adapter.get_after(ctx.connection, one_week_ago)
+        let recipes = case recent_meals |> result.all {
+          Error(_) -> []
+          Ok(meals) -> {
+            meals
+            |> list.map(fn(m) {
+              recipe_adapter.find_by_meal_id(ctx.connection, m.uuid)
+            })
+            |> list.flatten
+          }
+        }
+
+        meal_list_page.page(recent_meals, recipes)
         |> render
       }
 
@@ -140,14 +151,28 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             case meal, recipe {
               Ok(valid_meal), Ok(valid_recipe) -> {
                 let updated_recipe = meals.add_to_meal(valid_meal, valid_recipe)
+                // TODO process error case
                 recipe_adapter.bulk_insert([updated_recipe], ctx.connection)
-                [meal_renderer.view(#(valid_meal, updated_recipe))]
-                |> layout
-                |> render
-                |> wisp.set_header(
-                  "HX-location",
-                  "{\"path\": \"meals-list\", \"target\": \"#main\"}",
-                )
+                let meal_recipes =
+                  recipe_adapter.find_by_meal_id(ctx.connection, valid_meal_id)
+                  |> result.all
+                case meal_recipes {
+                  Ok(valid_recipes) -> {
+                    {
+                      [meal_renderer.view(valid_meal, valid_recipes)]
+                      |> layout
+                      |> render
+                      |> wisp.set_header(
+                        "HX-location",
+                        "{\"path\": \"meals-list\", \"target\": \"#main\"}",
+                      )
+                    }
+                  }
+                  Error(_) ->
+                    error_message(
+                      "Erreur de lecture des recettes associées aux repas",
+                    )
+                }
               }
               Error(message), _ -> error_message(message)
               _, Error(message) -> error_message(message)
@@ -247,20 +272,18 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         case parsed_parameters {
           Ok(#(valid_meal_id, parsed_recipe_id)) -> {
             let meals =
-              meals.replace__with_random_recipe(
+              meals.replace_recipe_with_random_one(
                 ctx,
                 valid_meal_id,
                 parsed_recipe_id,
               )
 
             case meals {
-              Ok([generated_meals]) ->
-                [meal_renderer.view(generated_meals)]
+              Ok(#(updated_meal, meal_recipes)) ->
+                [meal_renderer.view(updated_meal, meal_recipes)]
                 |> layout
                 |> render
               Error(message) -> error_message(message)
-              Ok([]) -> error_message("aucun menu généré")
-              Ok([_, _, ..]) -> error_message("multiples menus générés")
             }
           }
           Error(_) ->

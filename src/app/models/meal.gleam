@@ -1,11 +1,9 @@
 import app/models/recipe
 import gleam/dynamic/decode as dd
 import gleam/list
-import gleam/option.{None, Some}
-import gleam/string
+import gleam/option
 import tempo
 import tempo/datetime
-import wisp
 import youid/uuid
 
 pub type Meal {
@@ -47,110 +45,6 @@ pub fn decode(fields: dd.Dynamic) -> Result(Meal, List(dd.DecodeError)) {
           Error([
             dd.DecodeError(expected: "Valid uuid V4", found: menu_id, path: [
               "meal", "menu_id",
-            ]),
-          ])
-      }
-    }
-    Error(decoding_errors) -> Error(decoding_errors)
-  }
-}
-
-pub fn decode_meal_with_recipe(
-  fields: dd.Dynamic,
-) -> Result(#(Meal, recipe.Recipe), List(dd.DecodeError)) {
-  echo fields
-  let decoder = {
-    use date <- dd.field(0, dd.int)
-    use menu_id <- dd.field(1, dd.string)
-    use meal_uuid <- dd.field(2, dd.string)
-    use cooking_duration <- dd.field(3, dd.optional(dd.int))
-    use image <- dd.field(4, dd.string)
-    use ingredients <- dd.field(5, dd.string)
-    // the field #6 is skipped, because it's the meal id, which is already provided by a previous field 
-    use preparation_duration <- dd.field(7, dd.optional(dd.int))
-    use quantity <- dd.field(8, dd.optional(dd.int))
-    use steps <- dd.field(9, dd.string)
-    use title <- dd.field(10, dd.string)
-    use total_duration <- dd.field(11, dd.optional(dd.int))
-    use recipe_id <- dd.field(12, dd.optional(dd.string))
-    dd.success(#(
-      date,
-      menu_id,
-      meal_uuid,
-      cooking_duration,
-      image,
-      ingredients,
-      preparation_duration,
-      quantity,
-      steps,
-      title,
-      total_duration,
-      recipe_id,
-    ))
-  }
-  let decoded_record = dd.run(fields, decoder)
-  case decoded_record {
-    Ok(#(
-      date,
-      menu_id,
-      meal_uuid,
-      cooking_duration,
-      image,
-      ingredients,
-      preparation_duration,
-      quantity,
-      steps,
-      title,
-      total_duration,
-      recipe_id,
-    )) -> {
-      let maybe_meal_id = meal_uuid |> uuid.from_string
-      let maybe_menu_id = menu_id |> uuid.from_string
-      let maybe_recipe_id = case recipe_id {
-        None -> {
-          wisp.log_error("ERROR: invalid recipe UUID")
-          Error(Nil)
-        }
-        Some(id) -> uuid.from_string(id)
-      }
-      case maybe_meal_id, maybe_menu_id, maybe_recipe_id {
-        Ok(valid_meal_id), Ok(valid_menu_id), Ok(valid_recipe_id) ->
-          Ok(#(
-            Meal(
-              date |> datetime.from_unix_seconds,
-              valid_menu_id,
-              valid_meal_id,
-              option.None,
-            ),
-            recipe.Recipe(
-              cooking_duration:,
-              image:,
-              ingredients: ingredients |> string.split(recipe.separator),
-              meal_id: option.Some(valid_meal_id),
-              preparation_duration:,
-              quantity:,
-              steps:,
-              title:,
-              total_duration:,
-              uuid: valid_recipe_id,
-            ),
-          ))
-        Error(_), _, _ ->
-          Error([
-            dd.DecodeError(expected: "Valid uuid V4", found: meal_uuid, path: [
-              "meal", "meal_uuid",
-            ]),
-          ])
-        Ok(_), Error(_), _ ->
-          Error([
-            dd.DecodeError(expected: "Valid uuid V4", found: menu_id, path: [
-              "meal", "menu_id",
-            ]),
-          ])
-        Ok(_), Ok(_), Error(_) ->
-          Error([
-            dd.DecodeError(expected: "Valid uuid V4", found: menu_id, path: [
-              "meal", "recipe_id",
             ]),
           ])
       }

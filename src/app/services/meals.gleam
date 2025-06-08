@@ -14,20 +14,20 @@ import app/web.{type Context}
 pub fn generate_random_meals(
   ctx: Context,
   dates: List(tempo.DateTime),
-) -> Result(List(#(meal.Meal, recipe.Recipe)), String) {
+) -> Result(List(#(meal.Meal, List(recipe.Recipe))), String) {
   let meals = meal.for_dates(dates)
   case meal_adapter.insert(ctx.connection, meals) {
     Error(_) -> Error("Erreur d'enregistrement des repas")
     Ok(_) -> {
-      add_random_recipes_to_meals(ctx, meals)
+      add_random_recipe_to_meals(ctx, meals)
     }
   }
 }
 
-fn add_random_recipes_to_meals(
+fn add_random_recipe_to_meals(
   ctx: Context,
   meals: List(meal.Meal),
-) -> Result(List(#(meal.Meal, recipe.Recipe)), String) {
+) -> Result(List(#(meal.Meal, List(recipe.Recipe))), String) {
   let count = list.length(meals)
   let #(random_recipes, decoding_errors) =
     recipe_adapter.get_random(ctx.connection, count)
@@ -40,7 +40,13 @@ fn add_random_recipes_to_meals(
         |> recipe_adapter.bulk_insert(ctx.connection)
         |> result.partition
       case maybe_cloned_recipes {
-        #(cloned_recipes, []) -> Ok(list.zip(meals, cloned_recipes))
+        #(cloned_recipes, []) -> {
+          let recipe_lists =
+            cloned_recipes
+            |> list.map(fn(r) { [r] })
+
+          Ok(list.zip(meals, recipe_lists))
+        }
         #(_, [_, ..]) -> Error("Erreur lors de la copie des recettes")
       }
     }
@@ -48,25 +54,36 @@ fn add_random_recipes_to_meals(
   }
 }
 
-// replaces the current recipe in a given meal with a random one
+// replaces the given recipe in a given meal with a random one
 // TODO: ensure the new one is not the same as the previous one
-pub fn replace__with_random_recipe(
+pub fn replace_recipe_with_random_one(
   ctx: Context,
   meal_id: uuid.Uuid,
   recipe_id: uuid.Uuid,
-) -> Result(List(#(meal.Meal, recipe.Recipe)), String) {
+) -> Result(#(meal.Meal, List(recipe.Recipe)), String) {
   let meal = meal_adapter.get(ctx.connection, meal_id)
 
   case meal {
     Ok(valid_meal) -> {
-      let selected_recipes = add_random_recipes_to_meals(ctx, [valid_meal])
-      case selected_recipes {
+      let meals_with_selected_recipes =
+        add_random_recipe_to_meals(ctx, [valid_meal])
+      case meals_with_selected_recipes {
         Ok(_) -> {
           let _ = recipe_adapter.delete(recipe_id, ctx.connection)
 
-          selected_recipes
+          let recipes =
+            recipe_adapter.find_by_meal_id(ctx.connection, meal_id)
+            |> result.all
+          case recipes {
+            Ok(meal_recipes) -> Ok(#(valid_meal, meal_recipes))
+            Error(_) ->
+              Error(
+                "Erreur lors de la recherche des recettes associées au repas "
+                <> uuid.to_string(meal_id),
+              )
+          }
         }
-        Error(_) -> selected_recipes
+        Error(error_message) -> Error(error_message)
       }
     }
     _ -> Error("Erreur lors de la lecture du repas à modifier")

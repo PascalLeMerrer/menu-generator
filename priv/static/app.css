@@ -53,38 +53,48 @@ nav>div:hover {
   text-decoration: underline;
 }
 
-.generated_menu {
+.meal {
   display: grid;
-  grid-template-columns: 100px 100px 300px 100px;
+  grid-template-columns: 100px 100px auto;
   margin: 10px;
   border: 1px solid #444444;
 }
 
-.generated_menu .date {
+.meal .date {
   grid-column: 1;
   grid-row: 1;
 }
 
-.generated_menu .imagee {
+.meal-recipe {
+  grid-column: 1/4;
+  display: grid;
+  grid-template-columns: 100px auto 100px;
+  margin: 10px;
+  border: 1px solid #444444;
+  gap: 5px;
+}
+
+.meal-recipe .imagee {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.meal-recipe .title {
   grid-column: 2;
   grid-row: 1;
 }
 
-.generated_menu .title {
-  grid-column: 3;
-  grid-row: 1;
-}
 
-.generated_menu .actions {
-  grid-column: 4;
+.meal-recipe .actions {
+  grid-column: 3;
   grid-row: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.generated_menu .metadata {
-  grid-column: 1/5;
+.meal-recipe .metadata {
+  grid-column: 1/3;
   grid-row: 2;
 }
 
@@ -93,13 +103,13 @@ nav>div:hover {
   grid-template-columns: 1fr 1fr 100px;
 }
 
-.generated_menu .ingredients {
-  grid-column: 1/5;
+.meal-recipe .ingredients {
+  grid-column: 1/3;
   grid-row: 3;
 }
 
-.generated_menu .steps {
-  grid-column: 1/5;
+.meal-recipe .steps {
+  grid-column: 1/3;
   grid-row: 4;
 }
 
@@ -148,7 +158,7 @@ nav>div:hover {
   grid-row: 4;
 }
 
-.generated_menu>*,
+.meal>*,
 .recipe>* {
   padding: 5px;
 }

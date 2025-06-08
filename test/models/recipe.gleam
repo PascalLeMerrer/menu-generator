@@ -18,6 +18,8 @@ const preparation_duration = 20
 
 const total_duration = 30
 
+const quantity = 4
+
 pub fn decodes_recipe_with_one_step_and_one_ingredient_test() {
   let assert Ok(meal_id) = uuid.from_string(uuid1)
   let assert Ok(recipe_id) = uuid.from_string(uuid2)
@@ -28,6 +30,7 @@ pub fn decodes_recipe_with_one_step_and_one_ingredient_test() {
     "a unique ingredient",
     uuid1,
     preparation_duration,
+    quantity,
     "a unique step",
     title,
     total_duration,
@@ -36,14 +39,15 @@ pub fn decodes_recipe_with_one_step_and_one_ingredient_test() {
   |> recipe.decode()
   |> should.equal(
     Ok(recipe.Recipe(
-      title: title,
-      cooking_duration: option.Some(10),
-      preparation_duration: option.Some(20),
-      total_duration: option.Some(30),
-      image: image,
-      meal_id: Some(meal_id),
-      steps: "a unique step",
+      cooking_duration: Some(10),
+      image:,
       ingredients: ["a unique ingredient"],
+      meal_id: Some(meal_id),
+      preparation_duration: Some(20),
+      quantity: Some(4),
+      steps: "a unique step",
+      title:,
+      total_duration: Some(30),
       uuid: recipe_id,
     )),
   )
@@ -58,6 +62,7 @@ pub fn decodes_recipe_with_several_steps_and_ingredients_test() {
     "a first ingredient@a second ingredient",
     uuid1,
     preparation_duration,
+    quantity,
     "A first step.\nA second step",
     title,
     total_duration,
@@ -66,14 +71,15 @@ pub fn decodes_recipe_with_several_steps_and_ingredients_test() {
   |> recipe.decode()
   |> should.equal(
     Ok(recipe.Recipe(
-      title: title,
-      cooking_duration: option.Some(10),
-      preparation_duration: option.Some(20),
-      total_duration: option.Some(30),
-      image: image,
-      meal_id: Some(meal_id),
-      steps: "A first step.\nA second step",
+      cooking_duration: Some(10),
+      image:,
       ingredients: ["a first ingredient", "a second ingredient"],
+      meal_id: Some(meal_id),
+      preparation_duration: Some(20),
+      quantity: Some(4),
+      steps: "A first step.\nA second step",
+      title:,
+      total_duration: Some(30),
       uuid: recipe_id,
     )),
   )
@@ -95,6 +101,7 @@ pub fn decodes_real_recipe_test() {
     real_ingredients,
     uuid1,
     preparation_duration,
+    quantity,
     real_steps,
     real_title,
     total_duration,
@@ -103,18 +110,19 @@ pub fn decodes_real_recipe_test() {
   |> recipe.decode()
   |> should.equal(
     Ok(recipe.Recipe(
-      title: real_title,
-      cooking_duration: option.Some(10),
-      preparation_duration: option.Some(20),
-      total_duration: option.Some(30),
+      cooking_duration: Some(10),
       image: real_image,
-      meal_id: Some(real_meal_id),
-      steps: real_steps,
       ingredients: [
         "1 kg Pommes de terre", "3 cuil. à café de Paprika",
         "1 pincée de Piment", "3 cuil. à soupe Huile", "2 gousses d'ail", "Sel",
         "Poivre",
       ],
+      meal_id: Some(real_meal_id),
+      preparation_duration: Some(20),
+      quantity: Some(4),
+      steps: real_steps,
+      title: real_title,
+      total_duration: Some(30),
       uuid: real_recipe_id,
     )),
   )

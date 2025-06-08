@@ -1,7 +1,7 @@
 import app/models/recipe
 import app/routes/recipe_routes
 import gleam/list
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 import gleam/result
 import gleeunit/should
 import simplifile
@@ -16,12 +16,13 @@ fn oven_baked_bar() {
   let assert Ok(recipe_id) = uuid.from_string(recipe_uuid)
 
   recipe.Recipe(
-    cooking_duration: option.None,
-    preparation_duration: option.None,
-    total_duration: option.None,
+    cooking_duration: None,
+    preparation_duration: None,
+    total_duration: None,
     image: "https://assets.afcdn.com/image1.jpg",
     ingredients: ["1 oignon", "1 citron"],
     meal_id: Some(meal_id),
+    quantity: Some(4),
     steps: "Etape 1\nEtape 2",
     title: "Bar au four",
     uuid: recipe_id,
@@ -33,12 +34,13 @@ fn flan() {
   let assert Ok(recipe_id) = uuid.from_string(recipe_uuid)
 
   recipe.Recipe(
-    cooking_duration: option.None,
-    preparation_duration: option.None,
-    total_duration: option.None,
+    cooking_duration: None,
+    preparation_duration: None,
+    total_duration: None,
     image: "https://assets.afcdn.com/image2.jpg",
     ingredients: ["1 flan", "1 pâté de campagne"],
     meal_id: Some(uuid),
+    quantity: Some(4),
     steps: "Etape A\nEtape B",
     title: "Flan au pâté",
     uuid: recipe_id,
@@ -53,7 +55,7 @@ pub fn from_xml_decodes_cookbook_with_multiple_recipes_test() {
         <preptime>15 min</preptime>
         <cooktime>25 min</cooktime>
         <totaltime>40 min</totaltime>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 oignon</li>
             <li>1 citron</li>
@@ -79,7 +81,7 @@ pub fn from_xml_decodes_cookbook_with_multiple_recipes_test() {
         <preptime>15 min</preptime>
         <cooktime>25 min</cooktime>
         <totaltime>40 min</totaltime>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 flan</li>
             <li>1 pâté de campagne</li>
@@ -127,7 +129,7 @@ pub fn from_xml_decodes_recipes_with_empty_ingredients_test() {
    <cookbook>
     <recipe>
         <title>Bar au four</title>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 oignon</li>
             <li/>
@@ -143,7 +145,7 @@ pub fn from_xml_decodes_recipes_with_empty_ingredients_test() {
     </recipe>
     <recipe>
         <title>Flan au pâté</title>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 flan</li>
             <li>1 pâté de campagne</li>
@@ -167,7 +169,7 @@ pub fn from_xml_decodes_recipes_with_empty_steps_test() {
    <cookbook>
     <recipe>
         <title>Bar au four</title>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 oignon</li>
             <li>1 citron</li>
@@ -183,7 +185,7 @@ pub fn from_xml_decodes_recipes_with_empty_steps_test() {
     </recipe>
     <recipe>
         <title>Flan au pâté</title>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 flan</li>
             <li>1 pâté de campagne</li>
@@ -210,7 +212,7 @@ pub fn from_xml_decodes_recipes_without_steps_test() {
         <preptime>15 min</preptime>
         <cooktime>25 min</cooktime>
         <totaltime>40 min</totaltime>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 oignon</li>
             <li>1 citron</li>
@@ -223,7 +225,7 @@ pub fn from_xml_decodes_recipes_without_steps_test() {
         <preptime>15 min</preptime>
         <cooktime>25 min</cooktime>
         <totaltime>40 min</totaltime>
-        <quantity>2</quantity>
+        <quantity>4</quantity>
         <ingredient>
             <li>1 flan</li>
             <li>1 pâté de campagne</li>
@@ -263,6 +265,7 @@ pub fn from_xml_decodes_cookbook_containing_one_recipe_only_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <ingredient>
                 <li>1 oignon</li>
                 <li>1 citron</li>
@@ -286,6 +289,7 @@ pub fn from_xml_decodes_recipe_with_only_one_ingredient_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <ingredient>
                 <li>1 oignon</li>
             </ingredient>
@@ -310,6 +314,7 @@ pub fn from_xml_decodes_recipe_with_only_one_step_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <ingredient>
                 <li>1 oignon</li>
                 <li>1 citron</li>
@@ -332,6 +337,7 @@ pub fn from_xml_decodes_recipe_with_cooking_duration_in_min_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <cooktime>15 min</cooktime>
             <ingredient>
                 <li>1 oignon</li>
@@ -358,6 +364,7 @@ pub fn from_xml_decodes_recipe_with_cooking_duration_in_mn_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <cooktime>30 mn</cooktime>
             <ingredient>
                 <li>1 oignon</li>
@@ -384,6 +391,7 @@ pub fn from_xml_decodes_recipe_with_cooking_duration_in_hour_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <cooktime>1 h</cooktime>
             <ingredient>
                 <li>1 oignon</li>
@@ -410,6 +418,7 @@ pub fn from_xml_decodes_recipe_with_cooking_duration_in_hour_and_minutes_test() 
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <cooktime>1h30</cooktime>
             <ingredient>
                 <li>1 oignon</li>
@@ -436,6 +445,7 @@ pub fn from_xml_decodes_recipe_with_preparation_duration_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <preptime>10 min</preptime>
             <ingredient>
                 <li>1 oignon</li>
@@ -462,6 +472,7 @@ pub fn from_xml_decodes_recipe_with_total_duration_test() {
     <cookbook>
         <recipe>
             <title>Bar au four</title>
+            <quantity>4</quantity>
             <totaltime>25 min</totaltime>
             <ingredient>
                 <li>1 oignon</li>

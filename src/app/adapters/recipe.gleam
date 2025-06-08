@@ -25,6 +25,7 @@ pub const schema = "-- recipes that could be selected for new menus
     ingredients TEXT NOT NULL,
     meal_id TEXT,
     preparation_duration INTEGER, -- in minutes
+    quantity INTEGER,
     steps TEXT NOT NULL,
     title TEXT NOT NULL,
     total_duration INTEGER, -- in minutes
@@ -51,6 +52,7 @@ pub fn bulk_insert(
         None -> insert.null()
       },
       insert_maybe_int(recipe_to_insert.preparation_duration),
+      insert_maybe_int(recipe_to_insert.quantity),
       insert.string(recipe_to_insert.steps),
       insert.string(recipe_to_insert.title),
       insert_maybe_int(recipe_to_insert.total_duration),
@@ -60,11 +62,13 @@ pub fn bulk_insert(
   })
   |> insert.from_values(table_name: table_name, columns: [
     "cooking_duration", "image", "ingredients", "meal_id",
-    "preparation_duration", "steps", "title", "total_duration", "uuid",
+    "preparation_duration", "quantity", "steps", "title", "total_duration",
+    "uuid",
   ])
   |> insert.returning([
     "cooking_duration", "image", "ingredients", "meal_id",
-    "preparation_duration", "steps", "title", "total_duration", "uuid",
+    "preparation_duration", "quantity", "steps", "title", "total_duration",
+    "uuid",
   ])
   |> insert.to_query
   |> sqlite.run_write_query(decode.dynamic, db_connection)
@@ -210,6 +214,7 @@ fn all_columns() {
     select.col("ingredients"),
     select.col("meal_id"),
     select.col("preparation_duration"),
+    select.col("quantity"),
     select.col("steps"),
     select.col("title"),
     select.col("total_duration"),

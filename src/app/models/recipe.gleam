@@ -13,6 +13,7 @@ pub type Recipe {
     ingredients: List(String),
     meal_id: Option(uuid.Uuid),
     preparation_duration: Option(Int),
+    quantity: Option(Int),
     steps: String,
     title: String,
     total_duration: Option(Int),
@@ -29,16 +30,18 @@ pub fn decode(fields: dynamic.Dynamic) -> Result(Recipe, List(dd.DecodeError)) {
     use ingredients <- dd.field(2, dd.string)
     use meal_id <- dd.field(3, dd.optional(dd.string))
     use preparation_duration <- dd.field(4, dd.optional(dd.int))
-    use steps <- dd.field(5, dd.string)
-    use title <- dd.field(6, dd.string)
-    use total_duration <- dd.field(7, dd.optional(dd.int))
-    use recipe_id <- dd.field(8, dd.optional(dd.string))
+    use quantity <- dd.field(5, dd.optional(dd.int))
+    use steps <- dd.field(6, dd.string)
+    use title <- dd.field(7, dd.string)
+    use total_duration <- dd.field(8, dd.optional(dd.int))
+    use recipe_id <- dd.field(9, dd.optional(dd.string))
     dd.success(#(
       cooking_duration,
       image,
       ingredients,
       meal_id,
       preparation_duration,
+      quantity,
       steps,
       title,
       total_duration,
@@ -53,6 +56,7 @@ pub fn decode(fields: dynamic.Dynamic) -> Result(Recipe, List(dd.DecodeError)) {
       ingredients,
       meal_id,
       preparation_duration,
+      quantity,
       steps,
       title,
       total_duration,
@@ -85,14 +89,15 @@ pub fn decode(fields: dynamic.Dynamic) -> Result(Recipe, List(dd.DecodeError)) {
           case uuid.from_string(id) {
             Ok(valid_uuid) ->
               Ok(Recipe(
-                cooking_duration: cooking_duration,
-                image: image,
+                cooking_duration:,
+                image:,
                 ingredients: ingredients |> string.split(separator),
                 meal_id: meal_uuid,
-                preparation_duration: preparation_duration,
-                steps: steps,
-                title: title,
-                total_duration: total_duration,
+                preparation_duration:,
+                quantity:,
+                steps:,
+                title:,
+                total_duration:,
                 uuid: valid_uuid,
               ))
 

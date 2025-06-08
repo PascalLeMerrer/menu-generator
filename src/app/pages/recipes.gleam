@@ -184,27 +184,39 @@ pub fn view_metadata(recipe_to_display: recipe.Recipe) -> Element(t) {
     recipe_to_display.cooking_duration |> view_duration("Cuisson")
   let total_duration =
     recipe_to_display.total_duration |> view_duration("Total")
+  let quantity = recipe_to_display.quantity |> view_quantiy()
 
   div([hx.ext(["remove"]), class("durations")], [
-    span([], [text(preparation_duration)]),
-    span([], [text(total_duration)]),
+    preparation_duration,
+    total_duration,
     span([attribute.data("remove", "true"), class("close-button")], [
       text("masquer"),
     ]),
-    span([], [text(cooking_duration)]),
+    cooking_duration,
+    quantity,
   ])
 }
 
 fn view_duration(value: option.Option(Int), label: String) {
   case value {
     option.Some(minutes) if minutes < 60 ->
-      label <> " : " <> minutes |> int.to_string <> " minutes"
+      span([], [text(label <> " : " <> minutes |> int.to_string <> " minutes")])
     option.Some(minutes) -> {
       let remaining_minutes =
         minutes % 60 |> int.to_string |> string.pad_start(to: 2, with: "0")
       let hours = int.divide(minutes, 60) |> result.unwrap(0) |> int.to_string
-      label <> " : " <> hours <> "h" <> remaining_minutes
+      span([], [text(label <> " : " <> hours <> "h" <> remaining_minutes)])
     }
-    option.None -> ""
+    option.None -> span([], [])
+  }
+}
+
+fn view_quantiy(maybe_quantity: option.Option(Int)) {
+  case maybe_quantity {
+    option.None -> span([], [])
+    option.Some(value) -> {
+      let quantity = value |> int.to_string
+      span([], [text("Quantité : " <> quantity)])
+    }
   }
 }

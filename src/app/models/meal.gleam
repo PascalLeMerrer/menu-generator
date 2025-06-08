@@ -68,10 +68,11 @@ pub fn decode_meal_with_recipe(
     use ingredients <- dd.field(5, dd.string)
     // the field #6 is skipped, because it's the meal id, which is already provided by a previous field 
     use preparation_duration <- dd.field(7, dd.optional(dd.int))
-    use steps <- dd.field(8, dd.string)
-    use title <- dd.field(9, dd.string)
-    use total_duration <- dd.field(10, dd.optional(dd.int))
-    use recipe_id <- dd.field(11, dd.optional(dd.string))
+    use quantity <- dd.field(8, dd.optional(dd.int))
+    use steps <- dd.field(9, dd.string)
+    use title <- dd.field(10, dd.string)
+    use total_duration <- dd.field(11, dd.optional(dd.int))
+    use recipe_id <- dd.field(12, dd.optional(dd.string))
     dd.success(#(
       date,
       menu_id,
@@ -80,6 +81,7 @@ pub fn decode_meal_with_recipe(
       image,
       ingredients,
       preparation_duration,
+      quantity,
       steps,
       title,
       total_duration,
@@ -96,6 +98,7 @@ pub fn decode_meal_with_recipe(
       image,
       ingredients,
       preparation_duration,
+      quantity,
       steps,
       title,
       total_duration,
@@ -120,14 +123,15 @@ pub fn decode_meal_with_recipe(
               option.None,
             ),
             recipe.Recipe(
-              cooking_duration: cooking_duration,
-              image: image,
+              cooking_duration:,
+              image:,
               ingredients: ingredients |> string.split(recipe.separator),
               meal_id: option.Some(valid_meal_id),
-              preparation_duration: preparation_duration,
-              steps: steps,
-              title: title,
-              total_duration: total_duration,
+              preparation_duration:,
+              quantity:,
+              steps:,
+              title:,
+              total_duration:,
               uuid: valid_recipe_id,
             ),
           ))

@@ -159,8 +159,7 @@ fn duration_decoder() -> decode.Decoder(option.Option(Int)) {
     [""] -> {
       decode.success(option.None)
     }
-    a -> {
-      echo a
+    _ -> {
       wisp.log_error("Cannot import recipe with duration: " <> duration_string)
       decode.success(option.None)
     }

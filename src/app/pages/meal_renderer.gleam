@@ -66,6 +66,7 @@ fn view_recipe(meal_id: String, recipe: recipe.Recipe) {
     recipe.meal_id
     |> option.map(uuid.to_string)
     |> option.unwrap("")
+
   case recipe_meal_id == meal_id {
     True -> {
       let recipe_id = recipe.uuid |> uuid.to_string
@@ -89,6 +90,15 @@ fn view_recipe(meal_id: String, recipe: recipe.Recipe) {
               hx.swap(hx.OuterHTML, option.None),
             ],
             [text("Suggérer")],
+          ),
+          span(
+            [
+              class("action"),
+              hx.delete("recipes/" <> recipe_id),
+              hx.target(hx.CssSelector("closest .meal-recipe")),
+              hx.swap(hx.OuterHTML, option.None),
+            ],
+            [text("Supprimer")],
           ),
           span(
             [

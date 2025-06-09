@@ -141,7 +141,6 @@ pub fn delete(
   db_connection: sqlight.Connection,
 ) -> Result(List(decode.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
-  echo "step 2"
 
   let query = {
     delete_statement.new()

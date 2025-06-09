@@ -170,6 +170,7 @@ pub fn get_random(
   select.new()
   |> select.from_table(table_name)
   |> select.selects(all_columns())
+  |> select.where(where.col("meal_id") |> where.is_null)
   |> select.order_by(by: "RANDOM()", direction: select.Asc)
   |> select.limit(count)
   |> select.to_query
@@ -178,10 +179,9 @@ pub fn get_random(
   |> decode_recipes
 }
 
-// TODO move db_connection to first position
 pub fn delete(
-  uuid: uuid.Uuid,
   db_connection: sqlight.Connection,
+  uuid: uuid.Uuid,
 ) -> Result(List(decode.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
   delete_statement.new()

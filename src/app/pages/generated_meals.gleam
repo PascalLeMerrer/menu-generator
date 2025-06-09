@@ -10,9 +10,9 @@ pub fn page(meals: List(#(meal.Meal, List(recipe.Recipe)))) -> Element(t) {
     h2([], [text("Menus proposés")]),
     ..{
       meals
-      |> list.map(fn(meal_and_recipe) {
-        let #(valid_meal, valid_recipe) = meal_and_recipe
-        meal_renderer.view(valid_meal, valid_recipe)
+      |> list.map(fn(meal_and_recipes) {
+        let #(valid_meal, valid_recipes) = meal_and_recipes
+        meal_renderer.view(valid_meal, valid_recipes)
       })
     }
   ])

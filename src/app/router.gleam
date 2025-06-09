@@ -60,10 +60,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           Ok(valid_meal_id) ->
             case req.method {
               http.Delete -> {
-                echo "step 1"
                 case meal_adapter.delete(valid_meal_id, ctx.connection) {
                   Ok(_) -> string_tree.new() |> wisp.html_response(200)
-                  Error(_) -> error_message("L'affacement du repas a échoué")
+                  Error(_) -> error_message("L'effacement du repas a échoué")
                 }
               }
               _ -> wisp.method_not_allowed([])
@@ -90,14 +89,16 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           })
 
         let meals = case meal_dates {
+          // FIXME: les recettes doivent avoir un meal ID identique à celui du repas
           Ok(valid_dates) -> meals.generate_random_meals(ctx, valid_dates)
           Error(_) -> Error("dates invalides")
         }
         case meals {
-          Ok(generated_meals) ->
+          Ok(generated_meals) -> {
             [generated_meals.page(generated_meals)]
             |> layout
             |> render
+          }
           Error(message) -> error_message(message)
         }
       }
@@ -121,6 +122,30 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
         meal_list_page.page(recent_meals, recipes)
         |> render
+      }
+
+      ["recipes", recipe_id] -> {
+        let parsed_parameters = {
+          use parsed_recipe_id <- result.try({ uuid.from_string(recipe_id) })
+          Ok(parsed_recipe_id)
+        }
+        case parsed_parameters {
+          Ok(valid_recipe_id) ->
+            case req.method {
+              http.Delete -> {
+                case recipe_adapter.delete(ctx.connection, valid_recipe_id) {
+                  Ok(_) -> string_tree.new() |> wisp.html_response(200)
+                  Error(_) ->
+                    error_message("L'effacement de la recette a échoué")
+                }
+              }
+              _ -> wisp.method_not_allowed([])
+            }
+          Error(Nil) ->
+            error_message(
+              recipe_id <> " n'est pas un identifiant de recette valide",
+            )
+        }
       }
 
       ["recipes-import"] -> {
@@ -208,9 +233,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
                 [recipes.view_ingredients(valid_recipe)]
                 |> layout
                 |> render
-              [Error(_)] -> error_message("ingrédients non trouvés 1")
-              [] -> error_message("ingrédients non trouvés 2")
-              [_, _, ..] -> error_message("ingrédients non trouvés 3")
+              [Error(_)] -> error_message("ingrédients non trouvés (1)")
+              [] -> error_message("ingrédients non trouvés (2)")
+              [_, _, ..] -> error_message("ingrédients non trouvés (3)")
             }
           }
           Error(_) -> error_message("l'identifiant de la recette est invalide")
@@ -246,9 +271,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
                 [recipes.view_metadata(valid_recipe)]
                 |> layout
                 |> render
-              [Error(_)] -> error_message("métadonnées non trouvées 1")
-              [] -> error_message("métadonnées non trouvées 2")
-              [_, _, ..] -> error_message("métadonnées non trouvées 3")
+              [Error(_)] -> error_message("métadonnées non trouvées (1)")
+              [] -> error_message("métadonnées non trouvées (2)")
+              [_, _, ..] -> error_message("métadonnées non trouvées (3)")
             }
           }
           Error(_) -> error_message("l'identifiant de la recette est invalide")
@@ -366,9 +391,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
                 [recipes.view_steps(valid_recipe)]
                 |> layout
                 |> render
-              [Error(_)] -> error_message("étapes non trouvées 1")
-              [] -> error_message("étapes non trouvées 2")
-              [_, _, ..] -> error_message("étapes non trouvées 3")
+              [Error(_)] -> error_message("étapes non trouvées (1)")
+              [] -> error_message("étapes non trouvées (2)")
+              [_, _, ..] -> error_message("étapes non trouvées (3)")
             }
           }
           Error(_) -> error_message("l'identifiant de la recette est invalide")

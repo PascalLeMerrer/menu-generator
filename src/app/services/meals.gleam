@@ -32,6 +32,7 @@ fn add_random_recipe_to_meals(
   let #(random_recipes, decoding_errors) =
     recipe_adapter.get_random(ctx.connection, count)
     |> result.partition
+
   case random_recipes, decoding_errors {
     valid_recipes, [] -> {
       let maybe_cloned_recipes =
@@ -39,10 +40,12 @@ fn add_random_recipe_to_meals(
         |> add_recipes_to_meals(meals)
         |> recipe_adapter.bulk_insert(ctx.connection)
         |> result.partition
+
       case maybe_cloned_recipes {
         #(cloned_recipes, []) -> {
           let recipe_lists =
             cloned_recipes
+            |> list.reverse
             |> list.map(fn(r) { [r] })
 
           Ok(list.zip(meals, recipe_lists))
@@ -69,7 +72,7 @@ pub fn replace_recipe_with_random_one(
         add_random_recipe_to_meals(ctx, [valid_meal])
       case meals_with_selected_recipes {
         Ok(_) -> {
-          let _ = recipe_adapter.delete(recipe_id, ctx.connection)
+          let _ = recipe_adapter.delete(ctx.connection, recipe_id)
 
           let recipes =
             recipe_adapter.find_by_meal_id(ctx.connection, meal_id)

@@ -1,18 +1,11 @@
-import app/models/recipe
 import gleam/dynamic/decode as dd
 import gleam/list
-import gleam/option
 import tempo
 import tempo/datetime
 import youid/uuid
 
 pub type Meal {
-  Meal(
-    date: tempo.DateTime,
-    menu_id: uuid.Uuid,
-    uuid: uuid.Uuid,
-    recipe: option.Option(recipe.Recipe),
-  )
+  Meal(date: tempo.DateTime, menu_id: uuid.Uuid, uuid: uuid.Uuid)
 }
 
 pub fn decode(fields: dd.Dynamic) -> Result(Meal, List(dd.DecodeError)) {
@@ -29,12 +22,7 @@ pub fn decode(fields: dd.Dynamic) -> Result(Meal, List(dd.DecodeError)) {
       let maybe_menu_id = menu_id |> uuid.from_string
       case maybe_uuid, maybe_menu_id {
         Ok(valid_uuid), Ok(valid_menu_id) ->
-          Ok(Meal(
-            date |> datetime.from_unix_seconds,
-            valid_menu_id,
-            valid_uuid,
-            option.None,
-          ))
+          Ok(Meal(date |> datetime.from_unix_seconds, valid_menu_id, valid_uuid))
         Error(_), _ ->
           Error([
             dd.DecodeError(expected: "Valid uuid V4", found: meal_uuid, path: [
@@ -58,6 +46,6 @@ pub fn for_dates(dates: List(tempo.DateTime)) -> List(Meal) {
 
   dates
   |> list.map(fn(date: tempo.DateTime) {
-    Meal(date: date, menu_id: menu_uuid, uuid: uuid.v4(), recipe: option.None)
+    Meal(date: date, menu_id: menu_uuid, uuid: uuid.v4())
   })
 }

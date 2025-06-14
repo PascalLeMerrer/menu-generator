@@ -89,7 +89,6 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           })
 
         let meals = case meal_dates {
-          // FIXME: les recettes doivent avoir un meal ID identique à celui du repas
           Ok(valid_dates) -> meals.generate_random_meals(ctx, valid_dates)
           Error(_) -> Error("dates invalides")
         }
@@ -176,13 +175,14 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
             case meal, recipe {
               Ok(valid_meal), Ok(valid_recipe) -> {
                 let updated_recipe = meals.add_to_meal(valid_meal, valid_recipe)
-                // TODO process error case
-                recipe_adapter.bulk_insert([updated_recipe], ctx.connection)
+                let inserted_recipe =
+                  recipe_adapter.bulk_insert([updated_recipe], ctx.connection)
+                  |> result.all
                 let meal_recipes =
                   recipe_adapter.find_by_meal_id(valid_meal_id, ctx.connection)
                   |> result.all
-                case meal_recipes {
-                  Ok(valid_recipes) -> {
+                case meal_recipes, inserted_recipe {
+                  Ok(valid_recipes), Ok(_) -> {
                     {
                       [meal_renderer.view(valid_meal, valid_recipes)]
                       |> layout
@@ -193,9 +193,13 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
                       )
                     }
                   }
-                  Error(_) ->
+                  Error(_), _ ->
                     error_message(
-                      "Erreur de lecture des recettes associées aux repas",
+                      "Erreur de lecture des recettes associées au repas",
+                    )
+                  _, Error(_) ->
+                    error_message(
+                      "Erreur de l'écriture de la nouvelle recettes associée au repas",
                     )
                 }
               }

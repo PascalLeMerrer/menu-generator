@@ -41,7 +41,6 @@ const columns = [
   "quantity", "steps", "title", "total_duration", "uuid",
 ]
 
-// TODO move db_connection to first position
 pub fn bulk_insert(
   recipes: List(recipe.Recipe),
   db_connection: sqlight.Connection,
@@ -98,8 +97,8 @@ pub fn get_all(
 }
 
 pub fn find_by_meal_id(
-  db_connection: sqlight.Connection,
   meal_id: uuid.Uuid,
+  db_connection: sqlight.Connection,
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   let uuid = meal_id |> uuid.to_string
   select.new()
@@ -113,10 +112,10 @@ pub fn find_by_meal_id(
 }
 
 pub fn get(
-  db_connection: sqlight.Connection,
   recipe_id: uuid.Uuid,
+  db_connection: sqlight.Connection,
 ) -> Result(recipe.Recipe, String) {
-  let recipe = find_by_id(db_connection, recipe_id)
+  let recipe = find_by_id(recipe_id, db_connection)
 
   case recipe {
     [Ok(valid_recipe)] -> Ok(valid_recipe)
@@ -125,8 +124,8 @@ pub fn get(
 }
 
 pub fn find_by_id(
-  db_connection: sqlight.Connection,
   recipe_id: uuid.Uuid,
+  db_connection: sqlight.Connection,
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   let uuid = recipe_id |> uuid.to_string
   select.new()
@@ -139,7 +138,7 @@ pub fn find_by_id(
   |> decode_recipes
 }
 
-pub fn find_by_content(db_connection: sqlight.Connection, content: String) {
+pub fn find_by_content(content: String, db_connection: sqlight.Connection) {
   let filter = "%" <> content <> "%"
   let query = {
     select.new()
@@ -163,9 +162,9 @@ pub fn find_by_content(db_connection: sqlight.Connection, content: String) {
 }
 
 pub fn get_random(
-  db_connection: sqlight.Connection,
-  count: Int,
   // 0 will return all recipes
+  count: Int,
+  db_connection: sqlight.Connection,
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
@@ -180,8 +179,8 @@ pub fn get_random(
 }
 
 pub fn delete(
-  db_connection: sqlight.Connection,
   uuid: uuid.Uuid,
+  db_connection: sqlight.Connection,
 ) -> Result(List(decode.Dynamic), sqlight.Error) {
   let uuid = uuid |> uuid.to_string
   delete_statement.new()

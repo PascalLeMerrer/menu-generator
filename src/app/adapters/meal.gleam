@@ -26,8 +26,8 @@ pub const schema = "
   );"
 
 pub fn insert(
-  db_connection: sqlight.Connection,
   meals: List(meal.Meal),
+  db_connection: sqlight.Connection,
 ) -> Result(List(decode.Dynamic), sqlight.Error) {
   meals
   |> list.map(fn(meal) {
@@ -59,8 +59,8 @@ pub fn get_all(
 }
 
 pub fn get_limited_to(
-  db_connection: sqlight.Connection,
   limit: Int,
+  db_connection: sqlight.Connection,
 ) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   select.new()
   |> select.from_table(table_name)
@@ -74,8 +74,8 @@ pub fn get_limited_to(
 }
 
 pub fn get_after(
-  db_connection: sqlight.Connection,
   date: tempo.DateTime,
+  db_connection: sqlight.Connection,
 ) -> List(Result(meal.Meal, List(decode.DecodeError))) {
   let timestamp = date |> datetime.to_unix_seconds
 
@@ -101,8 +101,8 @@ pub fn get_after(
 }
 
 pub fn get(
-  db_connection: sqlight.Connection,
   meal_id: uuid.Uuid,
+  db_connection: sqlight.Connection,
 ) -> Result(meal.Meal, String) {
   let meal = find_by_id(meal_id, db_connection)
 

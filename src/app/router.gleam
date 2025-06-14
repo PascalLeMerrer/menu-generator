@@ -108,13 +108,13 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           instant.now()
           |> instant.as_local_datetime
           |> datetime.subtract(duration.days(days_in_week))
-        let recent_meals = meal_adapter.get_after(ctx.connection, one_week_ago)
+        let recent_meals = meal_adapter.get_after(one_week_ago, ctx.connection)
         let recipes = case recent_meals |> result.all {
           Error(_) -> []
           Ok(meals) -> {
             meals
             |> list.map(fn(m) {
-              recipe_adapter.find_by_meal_id(ctx.connection, m.uuid)
+              recipe_adapter.find_by_meal_id(m.uuid, ctx.connection)
             })
             |> list.flatten
           }
@@ -133,7 +133,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           Ok(valid_recipe_id) ->
             case req.method {
               http.Delete -> {
-                case recipe_adapter.delete(ctx.connection, valid_recipe_id) {
+                case recipe_adapter.delete(valid_recipe_id, ctx.connection) {
                   Ok(_) -> string_tree.new() |> wisp.html_response(200)
                   Error(_) ->
                     error_message("L'effacement de la recette a échoué")
@@ -170,8 +170,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
         case parsed_parameters {
           Ok(#(valid_meal_id, valid_recipe_id)) -> {
-            let recipe = recipe_adapter.get(ctx.connection, valid_recipe_id)
-            let meal = meal_adapter.get(ctx.connection, valid_meal_id)
+            let recipe = recipe_adapter.get(valid_recipe_id, ctx.connection)
+            let meal = meal_adapter.get(valid_meal_id, ctx.connection)
 
             case meal, recipe {
               Ok(valid_meal), Ok(valid_recipe) -> {
@@ -179,7 +179,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
                 // TODO process error case
                 recipe_adapter.bulk_insert([updated_recipe], ctx.connection)
                 let meal_recipes =
-                  recipe_adapter.find_by_meal_id(ctx.connection, valid_meal_id)
+                  recipe_adapter.find_by_meal_id(valid_meal_id, ctx.connection)
                   |> result.all
                 case meal_recipes {
                   Ok(valid_recipes) -> {
@@ -226,7 +226,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         case parsed_recipe_id {
           Ok(valid_recipe_id) -> {
             let recipe =
-              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
+              recipe_adapter.find_by_id(valid_recipe_id, ctx.connection)
 
             case recipe {
               [Ok(valid_recipe)] ->
@@ -264,7 +264,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         case parsed_recipe_id {
           Ok(valid_recipe_id) -> {
             let recipe =
-              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
+              recipe_adapter.find_by_id(valid_recipe_id, ctx.connection)
 
             case recipe {
               [Ok(valid_recipe)] ->
@@ -341,7 +341,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           Ok(#(non_empty_string, maybe_meal_id)) -> {
             let meal_to_change = some_meal_id(maybe_meal_id)
             let filtered_recipes =
-              recipe_adapter.find_by_content(ctx.connection, non_empty_string)
+              recipe_adapter.find_by_content(non_empty_string, ctx.connection)
 
             recipes.page(filtered_recipes, meal_to_change)
             |> render
@@ -384,7 +384,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
         case parsed_recipe_id {
           Ok(valid_recipe_id) -> {
             let recipe =
-              recipe_adapter.find_by_id(ctx.connection, valid_recipe_id)
+              recipe_adapter.find_by_id(valid_recipe_id, ctx.connection)
 
             case recipe {
               [Ok(valid_recipe)] ->
@@ -423,7 +423,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
               Ok(parsed_recipes) -> {
                 let _ = recipe_adapter.delete_unlinked(ctx.connection)
                 let _ =
-                  parsed_recipes |> recipe_adapter.bulk_insert(ctx.connection)
+                  recipe_adapter.bulk_insert(parsed_recipes, ctx.connection)
+
                 [upload_result.page(parsed_recipes)]
                 |> layout
                 |> render

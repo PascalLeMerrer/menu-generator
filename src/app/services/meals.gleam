@@ -19,7 +19,7 @@ pub fn generate_random_meals(
   case meal_adapter.insert(meals, ctx.connection) {
     Error(_) -> Error("Erreur d'enregistrement des repas")
     Ok(_) -> {
-      add_random_recipe_to_meals(ctx, meals)
+      add_random_recipe_to_meals(ctx, meals, excluding: [])
     }
   }
 }
@@ -27,10 +27,11 @@ pub fn generate_random_meals(
 fn add_random_recipe_to_meals(
   ctx: Context,
   meals: List(meal.Meal),
+  excluding recipes_to_exlude: List(uuid.Uuid),
 ) -> Result(List(#(meal.Meal, List(recipe.Recipe))), String) {
   let count = list.length(meals)
   let #(random_recipes, decoding_errors) =
-    recipe_adapter.get_random(count, ctx.connection)
+    recipe_adapter.get_random(count, recipes_to_exlude, ctx.connection)
     |> result.partition
 
   case random_recipes, decoding_errors {
@@ -69,7 +70,7 @@ pub fn replace_recipe_with_random_one(
   case meal {
     Ok(valid_meal) -> {
       let meals_with_selected_recipes =
-        add_random_recipe_to_meals(ctx, [valid_meal])
+        add_random_recipe_to_meals(ctx, [valid_meal], excluding: [recipe_id])
       case meals_with_selected_recipes {
         Ok(_) -> {
           let _ = recipe_adapter.delete(recipe_id, ctx.connection)

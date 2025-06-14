@@ -164,12 +164,22 @@ pub fn find_by_content(content: String, db_connection: sqlight.Connection) {
 pub fn get_random(
   // 0 will return all recipes
   count: Int,
-  db_connection: sqlight.Connection,
+  excluding recipe_uuids: List(uuid.Uuid),
+  db_connection db_connection: sqlight.Connection,
 ) -> List(Result(recipe.Recipe, List(decode.DecodeError))) {
+  let recipes_to_exclude =
+    recipe_uuids
+    |> list.map(fn(id) { id |> uuid.to_string |> where.string })
+
   select.new()
   |> select.from_table(table_name)
   |> select.selects(all_columns())
   |> select.where(where.col("meal_id") |> where.is_null)
+  |> select.where(
+    where.col("uuid")
+    |> where.in(recipes_to_exclude)
+    |> where.not,
+  )
   |> select.order_by(by: "RANDOM()", direction: select.Asc)
   |> select.limit(count)
   |> select.to_query

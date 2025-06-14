@@ -1,20 +1,11 @@
-# app
+# Menu generator
 
-[![Package Version](https://img.shields.io/hexpm/v/app)](https://hex.pm/packages/app)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/app/)
+A generator of menus, using my personal recipe list.
 
-```sh
-gleam add app@1
-```
-```gleam
-import app
+## Dependencies
 
-pub fn main() {
-  // TODO: An example of the project in use
-}
-```
-
-Further documentation can be found at <https://hexdocs.pm/app>.
+* Gleam 1.11+
+* Recipes exported from [Cookmate](https://www.cookmate.online/) in an XML file
 
 ## Development
 
@@ -22,4 +13,3 @@ Further documentation can be found at <https://hexdocs.pm/app>.
 gleam run   # Run the project
 gleam test  # Run the tests
 ```
-# gleam-tuto

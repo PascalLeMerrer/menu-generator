@@ -58,8 +58,26 @@ fn add_random_recipe_to_meals(
   }
 }
 
+// adds a given recipe to a meal
+pub fn suggest(ctx: Context, a_meal: meal.Meal, a_recipe: recipe.Recipe) {
+  let updated_recipe = add_to_meal(a_meal, a_recipe)
+  let inserted_recipe =
+    recipe_adapter.bulk_insert([updated_recipe], ctx.connection)
+    |> result.all
+  let meal_recipes =
+    recipe_adapter.find_by_meal_id(a_meal.uuid, ctx.connection)
+    |> result.all
+  case meal_recipes, inserted_recipe {
+    Ok(valid_recipes), Ok(_) -> {
+      Ok(valid_recipes)
+    }
+    Error(_), _ -> Error("Erreur de lecture des recettes associées au repas")
+    _, Error(_) ->
+      Error("Erreur de l'écriture de la nouvelle recettes associée au repas")
+  }
+}
+
 // replaces the given recipe in a given meal with a random one
-// TODO: ensure the new one is not the same as the previous one
 pub fn replace_recipe_with_random_one(
   ctx: Context,
   meal_id: uuid.Uuid,

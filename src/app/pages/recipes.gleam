@@ -97,8 +97,6 @@ fn view_recipe(
                       ]),
                       False,
                     ),
-                    // TODO revoir la ligne ci-dessous
-                    hx.target(hx.CssSelector("next .ingredients")),
                   ],
                   [text("Ajouter au repas")],
                 )
